@@ -1,0 +1,63 @@
+<head>
+<style>
+body {
+    font:13.34px helvetica,arial,freesans,clean,sans-serif;
+    color:black;
+    line-height:1.4em;
+    background-color: #F8F8F8;
+    padding: 0.7em;
+}
+pre {
+    margin:1em 0;
+    font-size:12px;
+    background-color:#eee;
+    border:1px solid #ddd;
+    padding:5px;
+    line-height:1.5em;
+    color:#444;
+    overflow:auto;
+    -webkit-box-shadow:rgba(0,0,0,0.07) 0 1px 2px inset;
+    -webkit-border-radius:3px;
+    -moz-border-radius:3px;border-radius:3px;
+}
+pre code {
+    padding:0;
+    font-size:12px;
+    background-color:#eee;
+    border:none;
+}
+code {
+    font-size:12px;
+    background-color:#f8f8ff;
+    color:#444;
+    padding:0 .2em;
+    border:1px solid #dedede;
+}
+</style>
+</head>
+<body>
+<h1>Earth, Sun, Moon, and Planets Plugin</h1>
+<p>This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their azimuth from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. When installed, this plugin can be found in the QGIS menu under <strong><em>Plugins-&gt;Earth, sun, moon &amp; plents</em></strong>. The planetary location alogorims are as follows:</p>
+<ul>
+<li><img src="icons/sun_icon.svg" alt="Sun position directly overhead"> <strong><em>Sun position directly overhead</em></strong> - This shows the location of the sun where it is directly overhead for a paricular date and time.</li>
+<li><img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> <strong><em>Moon position directly overhead</em></strong> - This shows the location of the moon where it is directly overhead for a paricular date and time.</li>
+<li><img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> <strong><em>Planetary positions directly overhead</em></strong> - This shows the location of the planets where they are directly overhead for a paricular date and time.</li>
+</ul>
+<p>As an example this is the dialog for the algorithm to calculate the sun directly overhead.</p>
+<div style="text-align:center"><img src="doc/sunalg.jpg" alt="Sun position directly overhead"></div>
+
+<p>The moon and planets are the same. This shows what this algorith produces when this algorithm is run.</p>
+<div style="text-align:center"><img src="doc/sunmoonmap.jpg" alt="Sun moon map"></div>
+
+<p>This shows the location of the sun, moon, and planets.</p>
+<div style="text-align:center"><img src="doc/sunmoonplanets.jpg" alt="Sun moon planets"></div>
+
+<p>The attributes table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.</p>
+<div style="text-align:center"><img src="doc/attributes.jpg" alt="Attributes"></div>
+
+<h2><img src="icons/info.svg" alt="Solar/lunar information"> Solar/lunar information</h2>
+<p>The user can click on the <img src="icons/coordCapture.svg" alt="coordinate capture"> coodinate capture icon and click on the map. This dialog is then populated with the following details. The timezone is automatically selected based on the coordinate.</p>
+<div style="text-align:center"><img src="doc/info.jpg" alt="Info"></div>
+
+<p>The <strong><em>Now</em></strong> icon <img src="icons/CurrentTime.png" width=24 height=24 alt="Now"> will set the date and time to the current computer time. The <strong><em>Use UTC</em></strong> check box displays the date and times in UTC; otherwise, they are displayed using the selected time zone as follows.</p>
+<div style="text-align:center"><img src="doc/info2.jpg" alt="Info"></div></body>
