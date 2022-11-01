@@ -38,11 +38,11 @@ class EarthSunMoon(object):
         self.toolbar = self.iface.addToolBar('Day/Night Tools Toolbar')
         self.toolbar.setObjectName('DayNightToolsToolbar')
         
-        icon = QIcon(os.path.dirname(__file__) + "/icons/daynight.png")
+        '''icon = QIcon(os.path.dirname(__file__) + "/icons/daynight.png")
         self.dayNightAction = QAction(icon, "Day/Night terminator", self.iface.mainWindow())
         self.dayNightAction.triggered.connect(self.dayNight)
         self.iface.addPluginToMenu("Earth, sun, moon && planets", self.dayNightAction)
-        self.toolbar.addAction(self.dayNightAction)
+        self.toolbar.addAction(self.dayNightAction)'''
         
         icon = QIcon(os.path.dirname(__file__) + "/icons/sun_icon.svg")
         self.sunPositionAction = QAction(icon, "Sun position directly overhead", self.iface.mainWindow())
