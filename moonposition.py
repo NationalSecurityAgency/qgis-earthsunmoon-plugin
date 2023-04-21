@@ -73,12 +73,12 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
         date = utc.date()
         time = utc.time()
         t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
-        moon_subpoint = wgs84.subpoint(geocentric_moon.at(t)) # subpoint method requires a geocentric position
+        moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
         
         feat = QgsFeature()
-        attr = ['Moon',float(moon_subpoint.latitude.degrees), float(moon_subpoint.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
+        attr = ['Moon',float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
         feat.setAttributes(attr)
-        pt = QgsPointXY(moon_subpoint.longitude.degrees, moon_subpoint.latitude.degrees)
+        pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
         feat.setGeometry(QgsGeometry.fromPointXY(pt))
         sink.addFeature(feat)
         if auto_style:

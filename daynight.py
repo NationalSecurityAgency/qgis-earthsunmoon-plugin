@@ -209,7 +209,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
             terminator_vector = rotation_matrix_around_axis(sun_vec, angle) @ first_terminator_vec
             # terminator_vector = rotation_matrix_around_axis(sun_vec, angle) @ normal_vec
             terminator_position = Geocentric(terminator_vector, t=t)
-            geographic_position = wgs84.subpoint(terminator_position)
+            geographic_position = wgs84.geographic_position_of(terminator_position)
             lon = geographic_position.longitude.degrees
             lat = geographic_position.latitude.degrees
             # print('lat: {} lon: {}'.format(lat,lon))

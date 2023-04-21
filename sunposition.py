@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from skyfield.api import load, wgs84
+from skyfield.api import Loader, load, wgs84
 from skyfield.positionlib import Geocentric
 
 from qgis.core import (
@@ -69,6 +69,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
         
+        # load = Loader(ephem_path)
         eph = load(ephem_path)
         earth = eph['earth'] # vector from solar system barycenter to geocenter
         sun = eph['sun'] # vector from solar system barycenter to sun
@@ -77,12 +78,12 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         date = utc.date()
         time = utc.time()
         t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
-        sun_subpoint = wgs84.subpoint(geocentric_sun.at(t)) # subpoint method requires a geocentric position
+        sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
         
         feat = QgsFeature()
-        attr = ['Sun', float(sun_subpoint.latitude.degrees), float(sun_subpoint.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
+        attr = ['Sun', float(sun_position.latitude.degrees), float(sun_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
         feat.setAttributes(attr)
-        pt = QgsPointXY(sun_subpoint.longitude.degrees, sun_subpoint.latitude.degrees)
+        pt = QgsPointXY(sun_position.longitude.degrees, sun_position.latitude.degrees)
         feat.setGeometry(QgsGeometry.fromPointXY(pt))
         sink.addFeature(feat)
         if auto_style:

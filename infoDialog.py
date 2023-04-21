@@ -32,7 +32,8 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         self.canvas = iface.mapCanvas()
         self.savedMapTool = None
         self.cur_location = None
-        self.tzf = TimezoneFinder(bin_file_location=os.path.join(os.path.dirname(__file__), 'libs/timezonefinder'))
+        # self.tzf = TimezoneFinder(bin_file_location=os.path.join(os.path.dirname(__file__), 'libs/timezonefinder'))
+        self.tzf = TimezoneFinder()
         
         # Set up a polygon rubber band
         self.rubber = QgsRubberBand(self.canvas)

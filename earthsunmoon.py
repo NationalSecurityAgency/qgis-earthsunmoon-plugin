@@ -18,10 +18,18 @@
 """
 from qgis.PyQt.QtCore import Qt, QUrl
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
 from qgis.core import QgsApplication
 import processing
-from .provider import EarthSunMoonProvider
+# Check to see if the TimeZoneFinder and Skyfield libraries are installed
+# If not display a message that they need to be installed first
+try:
+    from timezonefinder import TimezoneFinder
+    from skyfield.api import wgs84
+    libraries_found = True
+    from .provider import EarthSunMoonProvider
+except Exception:
+    libraries_found = False
 
 import os
 
@@ -32,41 +40,55 @@ class EarthSunMoon(object):
         self.iface = iface
         self.canvas = iface.mapCanvas()
 
-        self.provider = EarthSunMoonProvider()
+        # Make sure the path to the ephemeris file exists
+        path = os.path.join(QgsApplication.qgisSettingsDirPath(), "EarthSunMoon")
+        # if path doesn't exist, make it
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        if libraries_found:
+            self.provider = EarthSunMoonProvider()
 
     def initGui(self):
-        self.toolbar = self.iface.addToolBar('Day/Night Tools Toolbar')
-        self.toolbar.setObjectName('DayNightToolsToolbar')
+        if libraries_found:
+            self.toolbar = self.iface.addToolBar('Day/Night Tools Toolbar')
+            self.toolbar.setObjectName('DayNightToolsToolbar')
         
-        '''icon = QIcon(os.path.dirname(__file__) + "/icons/daynight.png")
-        self.dayNightAction = QAction(icon, "Day/Night terminator", self.iface.mainWindow())
-        self.dayNightAction.triggered.connect(self.dayNight)
-        self.iface.addPluginToMenu("Earth, sun, moon && planets", self.dayNightAction)
-        self.toolbar.addAction(self.dayNightAction)'''
-        
-        icon = QIcon(os.path.dirname(__file__) + "/icons/sun_icon.svg")
-        self.sunPositionAction = QAction(icon, "Sun position directly overhead", self.iface.mainWindow())
-        self.sunPositionAction.triggered.connect(self.sunPosition)
-        self.iface.addPluginToMenu("Earth, sun, moon && planets", self.sunPositionAction)
-        self.toolbar.addAction(self.sunPositionAction)
+            '''icon = QIcon(os.path.dirname(__file__) + "/icons/daynight.png")
+            self.dayNightAction = QAction(icon, "Day/Night terminator", self.iface.mainWindow())
+            self.dayNightAction.triggered.connect(self.dayNight)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.dayNightAction)
+            self.toolbar.addAction(self.dayNightAction)'''
+            
+            icon = QIcon(os.path.dirname(__file__) + "/icons/sun_icon.svg")
+            self.sunPositionAction = QAction(icon, "Sun position directly overhead", self.iface.mainWindow())
+            self.sunPositionAction.triggered.connect(self.sunPosition)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.sunPositionAction)
+            self.toolbar.addAction(self.sunPositionAction)
 
-        icon = QIcon(os.path.dirname(__file__) + "/icons/moon.png")
-        self.moonPositionAction = QAction(icon, "Moon position directly overhead", self.iface.mainWindow())
-        self.moonPositionAction.triggered.connect(self.moonPosition)
-        self.iface.addPluginToMenu("Earth, sun, moon && planets", self.moonPositionAction)
-        self.toolbar.addAction(self.moonPositionAction)
+            icon = QIcon(os.path.dirname(__file__) + "/icons/moon.png")
+            self.moonPositionAction = QAction(icon, "Moon position directly overhead", self.iface.mainWindow())
+            self.moonPositionAction.triggered.connect(self.moonPosition)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.moonPositionAction)
+            self.toolbar.addAction(self.moonPositionAction)
 
-        icon = QIcon(os.path.dirname(__file__) + "/icons/venus.png")
-        self.planetsAction = QAction(icon, "Planetary positions directly overhead", self.iface.mainWindow())
-        self.planetsAction.triggered.connect(self.planetPositions)
-        self.iface.addPluginToMenu("Earth, sun, moon && planets", self.planetsAction)
-        self.toolbar.addAction(self.planetsAction)
+            icon = QIcon(os.path.dirname(__file__) + "/icons/venus.png")
+            self.planetsAction = QAction(icon, "Planetary positions directly overhead", self.iface.mainWindow())
+            self.planetsAction.triggered.connect(self.planetPositions)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.planetsAction)
+            self.toolbar.addAction(self.planetsAction)
 
-        icon = QIcon(os.path.dirname(__file__) + "/icons/info.svg")
-        self.solarInfoAction = QAction(icon, "Solar/lunar information", self.iface.mainWindow())
-        self.solarInfoAction.triggered.connect(self.solarInfo)
-        self.iface.addPluginToMenu("Earth, sun, moon && planets", self.solarInfoAction)
-        self.toolbar.addAction(self.solarInfoAction)
+            icon = QIcon(os.path.dirname(__file__) + "/icons/info.svg")
+            self.solarInfoAction = QAction(icon, "Solar/lunar information", self.iface.mainWindow())
+            self.solarInfoAction.triggered.connect(self.solarInfo)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.solarInfoAction)
+            self.toolbar.addAction(self.solarInfoAction)
+        else:
+            icon = QIcon(":images/themes/default/mIndicatorBadLayer.svg")
+            # QIcon(":images/themes/default/mTaskCancel.svg")
+            self.requirementsActions = QAction(icon, "Required python libraries not installed", self.iface.mainWindow())
+            self.requirementsActions.triggered.connect(self.requirements)
+            self.iface.addPluginToMenu("Earth, sun, moon && planets", self.requirementsActions)
     
         # Help
         icon = QIcon(os.path.dirname(__file__) + '/icons/help.svg')
@@ -75,25 +97,39 @@ class EarthSunMoon(object):
         self.iface.addPluginToMenu('Earth, sun, moon && planets', self.helpAction)
 
         # Add the processing provider
-        QgsApplication.processingRegistry().addProvider(self.provider)
+        if libraries_found:
+            QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
         """Remove the plugin menu item and icon from QGIS GUI."""
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.dayNightAction)
-        self.iface.removeToolBarIcon(self.dayNightAction)
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.sunPositionAction)
-        self.iface.removeToolBarIcon(self.sunPositionAction)
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.moonPositionAction)
-        self.iface.removeToolBarIcon(self.moonPositionAction)
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.planetsAction)
-        self.iface.removeToolBarIcon(self.planetsAction)
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.solarInfoAction)
-        self.iface.removeToolBarIcon(self.solarInfoAction)
+        
+        if libraries_found:
+            '''self.iface.removePluginMenu('Earth, sun, moon && planets', self.dayNightAction)
+            self.iface.removeToolBarIcon(self.dayNightAction)'''
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.sunPositionAction)
+            self.iface.removeToolBarIcon(self.sunPositionAction)
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.moonPositionAction)
+            self.iface.removeToolBarIcon(self.moonPositionAction)
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.planetsAction)
+            self.iface.removeToolBarIcon(self.planetsAction)
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.solarInfoAction)
+            self.iface.removeToolBarIcon(self.solarInfoAction)
+            if self.solarInfoDialog:
+                self.iface.removeDockWidget(self.solarInfoDialog)
+                self.solarInfoDialog = None
+            QgsApplication.processingRegistry().removeProvider(self.provider)
+        else:
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.requirementsActions)
+    
         self.iface.removePluginMenu('Earth, sun, moon && planets', self.helpAction)
-        if self.solarInfoDialog:
-            self.iface.removeDockWidget(self.solarInfoDialog)
-            self.solarInfoDialog = None
-        QgsApplication.processingRegistry().removeProvider(self.provider)
+
+    def requirements(self):
+        message = '''
+        <p>This plugin requires <a href="https://timezonefinder.readthedocs.io/en/latest/">TimeZoneFinder</a> and <a href="https://rhodesmill.org/skyfield/">Skyfiled</a> libraries.<br/><br/>
+        These libraries can be installed by running the OSGeo4W shell as system administrator and running 'pip install skyfield timezonefinder' or whatever method you use to install python packages.<p>
+        <p>Once the libraries are installed, please restart QGIS.</p>
+        '''
+        QMessageBox.information(self.iface.mainWindow(), 'Plugin Requirements not Satisfied', message)
 
     def sunPosition(self):
         processing.execAlgorithmDialog('earthsunmoon:sunposition', {})

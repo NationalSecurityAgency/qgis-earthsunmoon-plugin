@@ -101,12 +101,12 @@ class PlanetPositionsAlgorithm(QgsProcessingAlgorithm):
     def returnPlanetaryZenith(self, body, eph, earth, t_utc, dt, utc):
         planet = eph[body] # vector from solar system barycenter to planet
         geocentric_planet = planet - earth # vector from geocenter to planet
-        planet_subpoint = wgs84.subpoint(geocentric_planet.at(t_utc)) # subpoint method requires a geocentric position
+        planet_position = wgs84.geographic_position_of(geocentric_planet.at(t_utc)) # geographic_position_of method requires a geocentric position
         f = QgsFeature()
         name =  body.split()[0]
-        attr = [name, float(planet_subpoint.latitude.degrees), float(planet_subpoint.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
+        attr = [name, float(planet_position.latitude.degrees), float(planet_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
         f.setAttributes(attr)
-        pt = QgsPointXY(planet_subpoint.longitude.degrees, planet_subpoint.latitude.degrees)
+        pt = QgsPointXY(planet_position.longitude.degrees, planet_position.latitude.degrees)
         f.setGeometry(QgsGeometry.fromPointXY(pt))
         return(f)
 
