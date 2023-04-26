@@ -10,9 +10,9 @@ about=
 
     This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It display solar and lunar information for a coordinate at the specified date and time.
 tracker=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin/issues
-repository=https://qgis-earthsunmoon-plugin
+repository=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin
 tags=time,conversion,sun,moon,planet,planets,date,dawn,sunrise,noon,sunset,dusk,weekday,mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto
-homepage=https://qgis-earthsunmoon-plugin
+homepage=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin
 category=Plugins
 icon=icon.png
 experimental=False
