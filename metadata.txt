@@ -1,18 +1,21 @@
 [general]
 name=Earth, Sun, Moon, and Planets
 qgisMinimumVersion=3.14
-description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It also plots the day/night terminator boundary.
-version=0.1.1
+description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It display solar and lunar information for a coordinate at the specified date and time. (Note the Python library dependencies.)
+version=3.0.0
 author=C Hamilton
 email=adenaculture@gmail.com
-about=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It also plots the day/night terminator boundary (currently not working).
-tracker=https://issues
+about=
+    This plugin requires 2 Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system adminstrator to do this. 
+
+    This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It display solar and lunar information for a coordinate at the specified date and time.
+tracker=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin/issues
 repository=https://qgis-earthsunmoon-plugin
-tags=time,conversion,sun,date,dawn,sunrise,noon,sunset,dusk,weekday
+tags=time,conversion,sun,moon,planet,planets,date,dawn,sunrise,noon,sunset,dusk,weekday,mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto
 homepage=https://qgis-earthsunmoon-plugin
 category=Plugins
 icon=icon.png
 experimental=False
 deprecated=False
 changelog=
-    0.1.1 - beta release
+    3.0.0 - First release
