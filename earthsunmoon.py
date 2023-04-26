@@ -23,36 +23,47 @@ from qgis.core import QgsApplication
 import processing
 # Check to see if the TimeZoneFinder and Skyfield libraries are installed
 # If not display a message that they need to be installed first
+# import traceback
 try:
     from timezonefinder import TimezoneFinder
     from skyfield.api import wgs84
     libraries_found = True
     from .provider import EarthSunMoonProvider
 except Exception:
+    # traceback.print_exc()
     libraries_found = False
 
 import os
+from .utils import settings, SettingsWidget
 
 class EarthSunMoon(object):
     solarInfoDialog = None
+    ephemInfoDialog = None
+    settingsDialog = None
 
     def __init__(self, iface):
         self.iface = iface
         self.canvas = iface.mapCanvas()
 
         # Make sure the path to the ephemeris file exists
-        path = os.path.join(QgsApplication.qgisSettingsDirPath(), "EarthSunMoon")
+        path = settings.ephemDir()
         # if path doesn't exist, make it
         if not os.path.exists(path):
             os.makedirs(path)
+        # If the default ephemeris is not in the EarthSunMoon directory copy it to there.
+        default_ephem_path = settings.defaultEphemPath()
+        if not os.path.exists(default_ephem_path):
+            from shutil import copyfile
+            src = os.path.join(os.path.dirname(__file__), 'data', settings.defaultEphemFile())
+            copyfile(src, default_ephem_path)            
 
         if libraries_found:
             self.provider = EarthSunMoonProvider()
 
     def initGui(self):
         if libraries_found:
-            self.toolbar = self.iface.addToolBar('Day/Night Tools Toolbar')
-            self.toolbar.setObjectName('DayNightToolsToolbar')
+            self.toolbar = self.iface.addToolBar('Earth/Sun/Moon Toolbar')
+            self.toolbar.setObjectName('EarthSunMoonToolbar')
         
             '''icon = QIcon(os.path.dirname(__file__) + "/icons/daynight.png")
             self.dayNightAction = QAction(icon, "Day/Night terminator", self.iface.mainWindow())
@@ -85,11 +96,22 @@ class EarthSunMoon(object):
             self.toolbar.addAction(self.solarInfoAction)
         else:
             icon = QIcon(":images/themes/default/mIndicatorBadLayer.svg")
-            # QIcon(":images/themes/default/mTaskCancel.svg")
             self.requirementsActions = QAction(icon, "Required python libraries not installed", self.iface.mainWindow())
             self.requirementsActions.triggered.connect(self.requirements)
             self.iface.addPluginToMenu("Earth, sun, moon && planets", self.requirementsActions)
     
+        # Selected ephemeris information
+        icon = QIcon(os.path.dirname(__file__) + "/icons/ephem.svg")
+        self.ephemAction = QAction(icon, "Ephemeris information", self.iface.mainWindow())
+        self.ephemAction.triggered.connect(self.ephemInfo)
+        self.iface.addPluginToMenu('Earth, sun, moon && planets', self.ephemAction)
+
+        # Settings
+        icon = QIcon(':/images/themes/default/mActionOptions.svg')
+        self.settingsAction = QAction(icon, 'Settings', self.iface.mainWindow())
+        self.settingsAction.triggered.connect(self.settings)
+        self.iface.addPluginToMenu('Earth, sun, moon && planets', self.settingsAction)
+        
         # Help
         icon = QIcon(os.path.dirname(__file__) + '/icons/help.svg')
         self.helpAction = QAction(icon, "Help", self.iface.mainWindow())
@@ -121,6 +143,8 @@ class EarthSunMoon(object):
         else:
             self.iface.removePluginMenu('Earth, sun, moon && planets', self.requirementsActions)
     
+        self.iface.removePluginMenu('Earth, sun, moon && planets', self.ephemAction)
+        self.iface.removePluginMenu('Earth, sun, moon && planets', self.settingsAction)
         self.iface.removePluginMenu('Earth, sun, moon && planets', self.helpAction)
 
     def requirements(self):
@@ -150,7 +174,17 @@ class EarthSunMoon(object):
             # self.solarInfoDialog.setFloating(True)
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.solarInfoDialog)
         self.solarInfoDialog.show()
-        
+
+    def ephemInfo(self):
+        if not self.ephemInfoDialog:
+            from .ephemInfo import EphemerisInfo
+            self.ephemInfoDialog = EphemerisInfo(self.iface, self.iface.mainWindow())
+        self.ephemInfoDialog.show()
+
+    def settings(self):
+        if self.settingsDialog is None:
+            self.settingsDialog = SettingsWidget(self.iface, self.iface.mainWindow())
+        self.settingsDialog.show()
 
     def help(self):
         '''Display a help page'''
