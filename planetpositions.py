@@ -18,7 +18,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, ephem_path
+from .utils import epsg4326, settings
 
 class PlanetPositionsAlgorithm(QgsProcessingAlgorithm):
     """
@@ -69,7 +69,7 @@ class PlanetPositionsAlgorithm(QgsProcessingAlgorithm):
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
         
-        eph = load(ephem_path)
+        eph = load(settings.ephemPath())
         earth = eph['earth'] # vector from solar system barycenter to geocenter
         ts = load.timescale()
         date = utc.date()

@@ -14,7 +14,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, ephem_path
+from .utils import epsg4326, settings
 
 class MoonPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -54,6 +54,20 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
         dt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
         utc = dt.toUTC()
+        eph = load(settings.ephemPath())
+        earth = eph['earth'] # vector from solar system barycenter to geocenter
+        moon = eph['moon'] # vector from solar system barycenter to moon
+        geocentric_moon = moon - earth # vector from geocenter to moon
+        ts = load.timescale()
+        date = utc.date()
+        time = utc.time()
+        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
+        try:
+            moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
+        except Exception:
+            feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
+            return {}
+            
         f = QgsFields()
         f.append(QgsField("name", QVariant.String))
         f.append(QgsField("latitude", QVariant.Double))
@@ -64,16 +78,6 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
-        
-        eph = load(ephem_path)
-        earth = eph['earth'] # vector from solar system barycenter to geocenter
-        moon = eph['moon'] # vector from solar system barycenter to moon
-        geocentric_moon = moon - earth # vector from geocenter to moon
-        ts = load.timescale()
-        date = utc.date()
-        time = utc.time()
-        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
-        moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
         
         feat = QgsFeature()
         attr = ['Moon',float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]

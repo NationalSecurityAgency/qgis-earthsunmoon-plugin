@@ -15,7 +15,7 @@ from qgis.PyQt.uic import loadUiType
 from qgis.core import Qgis, QgsPointXY, QgsLineString, QgsMultiPolygon, QgsPolygon, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.gui import QgsRubberBand
 from .captureCoordinate import CaptureCoordinate
-from .utils import epsg4326, ephem_path
+from .utils import epsg4326, settings
 from .wintz import win_tz_map
 from .dms import parseDMSString
 
@@ -32,7 +32,6 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         self.canvas = iface.mapCanvas()
         self.savedMapTool = None
         self.cur_location = None
-        # self.tzf = TimezoneFinder(bin_file_location=os.path.join(os.path.dirname(__file__), 'libs/timezonefinder'))
         self.tzf = TimezoneFinder()
         
         # Set up a polygon rubber band
@@ -108,105 +107,109 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
     def updateSunInfo(self):
         self.updateGuiDateTime()
         self.clearInfo()
-        if self.cur_location:
-            # Set coordinate
-            coord = '{:.8f}, {:.8f}'.format(self.cur_location.y(), self.cur_location.x())
-            self.coordLineEdit.setText(coord)
-            loc = wgs84.latlon(self.cur_location.y(), self.cur_location.x())
-            ts = load.timescale()
-            dt = self.getLocalDateTime()
-            year = dt.year
-            dt = dt.replace(tzinfo=None)
-            ldt = self.tz.localize(dt)
-            cur_time = ts.from_datetime(ldt)
+        try:
+            if self.cur_location:
+                # Set coordinate
+                coord = '{:.8f}, {:.8f}'.format(self.cur_location.y(), self.cur_location.x())
+                self.coordLineEdit.setText(coord)
+                loc = wgs84.latlon(self.cur_location.y(), self.cur_location.x())
+                ts = load.timescale()
+                dt = self.getLocalDateTime()
+                year = dt.year
+                dt = dt.replace(tzinfo=None)
+                ldt = self.tz.localize(dt)
+                cur_time = ts.from_datetime(ldt)
+                
+                # Load  ephemeris
+                eph = load_file(settings.ephemPath())
+                earth = eph['earth']
+                sun = eph['sun']
+                moon = eph['moon']
+                
+                # Get sun azimuth and altitude
+                observer = earth + loc
+                astrometric = observer.at(cur_time).observe(sun)
+                alt, az, d = astrometric.apparent().altaz()
+                self.sunAzimuthLabel.setText('{:.6f}'.format(az.degrees))
+                self.sunElevationLabel.setText('{:.6f}'.format(alt.degrees))
             
-            # Load  ephemeris
-            eph = load_file(ephem_path)
-            earth = eph['earth']
-            sun = eph['sun']
-            moon = eph['moon']
-            
-            # Get sun azimuth and altitude
-            observer = earth + loc
-            astrometric = observer.at(cur_time).observe(sun)
-            alt, az, d = astrometric.apparent().altaz()
-            self.sunAzimuthLabel.setText('{:.6f}'.format(az.degrees))
-            self.sunElevationLabel.setText('{:.6f}'.format(alt.degrees))
-        
-            # Get moon azimuth and altitude
-            astrometric = observer.at(cur_time).observe(moon)
-            alt, az, d = astrometric.apparent().altaz()
-            self.moonAzimuthLabel.setText('{:.6f}'.format(az.degrees))
-            self.moonElevationLabel.setText('{:.6f}'.format(alt.degrees))
-            
-            # Get solar noon
-            midnight = ldt.replace(hour=0, minute=0, second=0, microsecond=0)
-            next_midnight = midnight + timedelta(days=1)
-            t0 = ts.from_datetime(midnight) # Starting time to search for events
-            t1 = ts.from_datetime(next_midnight) # Ending time to search for events
-            
-            f = almanac.meridian_transits(eph, sun, loc)
-            times, events = almanac.find_discrete(t0, t1, f)
-            if times:
-                # Select transits instead of antitransits.
-                times = times[events == 1]
-                t = times[0]
-                self.noonLabel.setText(self.formatDateTime(t))
-            
-            # Find the twlight hours
-            f = almanac.dark_twilight_day(eph, loc)
-            times, events = almanac.find_discrete(t0, t1, f)
-            previous_e = f(t0)
-            has_start = False
-            has_end = False
-            for t, e in zip(times, events):
-                if previous_e < e:
-                    if e == 4: # Day starts
-                        day_start = t
-                        has_start = True
-                        self.sunriseLabel.setText(self.formatDateTime(t))
-                    elif e == 3: # Dawn
-                        self.dawnLabel.setText(self.formatDateTime(t))
+                # Get moon azimuth and altitude
+                astrometric = observer.at(cur_time).observe(moon)
+                alt, az, d = astrometric.apparent().altaz()
+                self.moonAzimuthLabel.setText('{:.6f}'.format(az.degrees))
+                self.moonElevationLabel.setText('{:.6f}'.format(alt.degrees))
+                
+                # Get solar noon
+                midnight = ldt.replace(hour=0, minute=0, second=0, microsecond=0)
+                next_midnight = midnight + timedelta(days=1)
+                t0 = ts.from_datetime(midnight) # Starting time to search for events
+                t1 = ts.from_datetime(next_midnight) # Ending time to search for events
+                
+                f = almanac.meridian_transits(eph, sun, loc)
+                times, events = almanac.find_discrete(t0, t1, f)
+                if times:
+                    # Select transits instead of antitransits.
+                    times = times[events == 1]
+                    t = times[0]
+                    self.noonLabel.setText(self.formatDateTime(t))
+                
+                # Find the twlight hours
+                f = almanac.dark_twilight_day(eph, loc)
+                times, events = almanac.find_discrete(t0, t1, f)
+                previous_e = f(t0)
+                has_start = False
+                has_end = False
+                for t, e in zip(times, events):
+                    if previous_e < e:
+                        if e == 4: # Day starts
+                            day_start = t
+                            has_start = True
+                            self.sunriseLabel.setText(self.formatDateTime(t))
+                        elif e == 3: # Dawn
+                            self.dawnLabel.setText(self.formatDateTime(t))
+                    else:
+                        if e == 3: # Civil twilight starts
+                            day_end = t
+                            has_end = True
+                            self.civilTwilightLabel.setText(self.formatDateTime(t))
+                            self.sunsetLabel.setText(self.formatDateTime(t))
+                        elif e == 2: # Nautical twilight starts
+                            self.nauticalTwilightLabel.setText(self.formatDateTime(t))
+                        elif e == 1: # Astronomical twilight starts
+                            self.astronomicalTwilightLabel.setText(self.formatDateTime(t))
+                        elif e == 0: # Night starts
+                            self.nightLabel.setText(self.formatDateTime(t))
+                    previous_e = e
+                if has_start and has_end:
+                    diff = relativedelta(day_end.utc_datetime(), day_start.utc_datetime())
+                    if diff.days == 1:
+                        str = '24 hours'
+                    else:
+                        str = '{}h {}m {}s'.format(diff.hours, diff.minutes, diff.seconds)
+                    self.daylightDurationLabel.setText(str)
                 else:
-                    if e == 3: # Civil twilight starts
-                        day_end = t
-                        has_end = True
-                        self.civilTwilightLabel.setText(self.formatDateTime(t))
-                        self.sunsetLabel.setText(self.formatDateTime(t))
-                    elif e == 2: # Nautical twilight starts
-                        self.nauticalTwilightLabel.setText(self.formatDateTime(t))
-                    elif e == 1: # Astronomical twilight starts
-                        self.astronomicalTwilightLabel.setText(self.formatDateTime(t))
-                    elif e == 0: # Night starts
-                        self.nightLabel.setText(self.formatDateTime(t))
-                previous_e = e
-            if has_start and has_end:
-                diff = relativedelta(day_end.utc_datetime(), day_start.utc_datetime())
-                if diff.days == 1:
-                    str = '24 hours'
-                else:
-                    str = '{}h {}m {}s'.format(diff.hours, diff.minutes, diff.seconds)
-                self.daylightDurationLabel.setText(str)
-            else:
-                f = almanac.sunrise_sunset(eph, loc)
-                str = 'Polar day' if f(t0) else 'Polar night'
-                self.sunriseLabel.setText(str)
-                self.sunsetLabel.setText(str)
-            
-            # Calculate the phase of the moon
-            t = ts.from_datetime(self.dt_utc)
-            phase = almanac.moon_phase(eph, t)
-            self.moonPhaseLabel.setText('{:.1f} degrees'.format(phase.degrees))
-            
-            
-            # Calculate the seasons
-            t0 = ts.utc(year, 1, 1)
-            t1 = ts.utc(year, 12, 31)
-            t, y = almanac.find_discrete(t0, t1, almanac.seasons(eph))
-            self.vernalEquinoxLabel.setText(self.formatDateTime(t[0]))
-            self.summerSolsticeLabel.setText(self.formatDateTime(t[1]))
-            self.autumnalEquinoxLabel.setText(self.formatDateTime(t[2]))
-            self.winterSolsticeLabel.setText(self.formatDateTime(t[3]))
+                    f = almanac.sunrise_sunset(eph, loc)
+                    str = 'Polar day' if f(t0) else 'Polar night'
+                    self.sunriseLabel.setText(str)
+                    self.sunsetLabel.setText(str)
+                
+                # Calculate the phase of the moon
+                t = ts.from_datetime(self.dt_utc)
+                phase = almanac.moon_phase(eph, t)
+                self.moonPhaseLabel.setText('{:.1f} degrees'.format(phase.degrees))
+                
+                
+                # Calculate the seasons
+                t0 = ts.utc(year, 1, 1)
+                t1 = ts.utc(year, 12, 31)
+                t, y = almanac.find_discrete(t0, t1, almanac.seasons(eph))
+                self.vernalEquinoxLabel.setText(self.formatDateTime(t[0]))
+                self.summerSolsticeLabel.setText(self.formatDateTime(t[1]))
+                self.autumnalEquinoxLabel.setText(self.formatDateTime(t[2]))
+                self.winterSolsticeLabel.setText(self.formatDateTime(t[3]))
+        except Exception:
+            self.iface.messageBar().pushMessage("", "The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.", level=Qgis.Critical, duration=6)
+                
             
     def clearInfo(self):
         self.sunAzimuthLabel.setText('')
@@ -226,6 +229,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         self.summerSolsticeLabel.setText('')
         self.autumnalEquinoxLabel.setText('')
         self.winterSolsticeLabel.setText('')
+        self.moonPhaseLabel.setText('')
 
     def formatDateTime(self, dt):
         if self.useUtcCheckBox.isChecked():

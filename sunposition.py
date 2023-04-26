@@ -18,7 +18,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, ephem_path
+from .utils import epsg4326, settings
 
 class SunPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -58,6 +58,20 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
         dt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
         utc = dt.toUTC()
+        eph = load(settings.ephemPath())
+        earth = eph['earth'] # vector from solar system barycenter to geocenter
+        sun = eph['sun'] # vector from solar system barycenter to sun
+        geocentric_sun = sun - earth # vector from geocenter to sun
+        ts = load.timescale()
+        date = utc.date()
+        time = utc.time()
+        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
+        try:
+            sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
+        except Exception:
+            feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
+            return {}
+
         f = QgsFields()
         f.append(QgsField("name", QVariant.String))
         f.append(QgsField("latitude", QVariant.Double))
@@ -68,17 +82,6 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
-        
-        # load = Loader(ephem_path)
-        eph = load(ephem_path)
-        earth = eph['earth'] # vector from solar system barycenter to geocenter
-        sun = eph['sun'] # vector from solar system barycenter to sun
-        geocentric_sun = sun - earth # vector from geocenter to sun
-        ts = load.timescale()
-        date = utc.date()
-        time = utc.time()
-        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
-        sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
         
         feat = QgsFeature()
         attr = ['Sun', float(sun_position.latitude.degrees), float(sun_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
