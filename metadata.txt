@@ -1,14 +1,14 @@
 [general]
 name=Earth, Sun, Moon, and Planets
 qgisMinimumVersion=3.14
-description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It display solar and lunar information for a coordinate at the specified date and time. (Note the Python library dependencies.)
+description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time. (Note the Python library dependencies.)
 version=3.0.0
 author=C Hamilton
 email=adenaculture@gmail.com
 about=
-    This plugin requires 2 Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system adminstrator to do this. 
+    This plugin requires two Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system administrator to do this. 
 
-    This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It display solar and lunar information for a coordinate at the specified date and time.
+    This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time.
 tracker=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin/issues
 repository=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin
 tags=time,conversion,sun,moon,planet,planets,date,dawn,sunrise,noon,sunset,dusk,weekday,mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto
