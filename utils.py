@@ -4,9 +4,11 @@ from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsSettings, QgsApplication
 from qgis.PyQt.QtWidgets import QDialog
 from datetime import date
-from jplephem.spk import SPK
 from shutil import copyfile
-import traceback
+try:
+    from jplephem.spk import SPK
+except Exception:
+    pass
 
 epsg4326 = QgsCoordinateReferenceSystem('EPSG:4326')
 
@@ -78,7 +80,6 @@ class Settings():
                 msg = '{}\n{}'.format(self.ephemPath(), str(spk))
             spk.close()
         except Exception:
-            traceback.print_exc()
             msg = ''
         return(msg)
 

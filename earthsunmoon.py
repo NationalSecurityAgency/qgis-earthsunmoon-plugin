@@ -27,6 +27,7 @@ import processing
 try:
     from timezonefinder import TimezoneFinder
     from skyfield.api import wgs84
+    from jplephem.spk import SPK
     libraries_found = True
     from .provider import EarthSunMoonProvider
 except Exception:
@@ -94,17 +95,17 @@ class EarthSunMoon(object):
             self.solarInfoAction.triggered.connect(self.solarInfo)
             self.iface.addPluginToMenu("Earth, sun, moon && planets", self.solarInfoAction)
             self.toolbar.addAction(self.solarInfoAction)
+    
+            # Selected ephemeris information
+            icon = QIcon(os.path.dirname(__file__) + "/icons/ephem.svg")
+            self.ephemAction = QAction(icon, "Ephemeris information", self.iface.mainWindow())
+            self.ephemAction.triggered.connect(self.ephemInfo)
+            self.iface.addPluginToMenu('Earth, sun, moon && planets', self.ephemAction)
         else:
             icon = QIcon(":images/themes/default/mIndicatorBadLayer.svg")
             self.requirementsActions = QAction(icon, "Required python libraries not installed", self.iface.mainWindow())
             self.requirementsActions.triggered.connect(self.requirements)
             self.iface.addPluginToMenu("Earth, sun, moon && planets", self.requirementsActions)
-    
-        # Selected ephemeris information
-        icon = QIcon(os.path.dirname(__file__) + "/icons/ephem.svg")
-        self.ephemAction = QAction(icon, "Ephemeris information", self.iface.mainWindow())
-        self.ephemAction.triggered.connect(self.ephemInfo)
-        self.iface.addPluginToMenu('Earth, sun, moon && planets', self.ephemAction)
 
         # Settings
         icon = QIcon(':/images/themes/default/mActionOptions.svg')
@@ -136,6 +137,7 @@ class EarthSunMoon(object):
             self.iface.removeToolBarIcon(self.planetsAction)
             self.iface.removePluginMenu('Earth, sun, moon && planets', self.solarInfoAction)
             self.iface.removeToolBarIcon(self.solarInfoAction)
+            self.iface.removePluginMenu('Earth, sun, moon && planets', self.ephemAction)
             if self.solarInfoDialog:
                 self.iface.removeDockWidget(self.solarInfoDialog)
                 self.solarInfoDialog = None
@@ -143,14 +145,13 @@ class EarthSunMoon(object):
         else:
             self.iface.removePluginMenu('Earth, sun, moon && planets', self.requirementsActions)
     
-        self.iface.removePluginMenu('Earth, sun, moon && planets', self.ephemAction)
         self.iface.removePluginMenu('Earth, sun, moon && planets', self.settingsAction)
         self.iface.removePluginMenu('Earth, sun, moon && planets', self.helpAction)
 
     def requirements(self):
         message = '''
         <p>This plugin requires <a href="https://timezonefinder.readthedocs.io/en/latest/">TimeZoneFinder</a> and <a href="https://rhodesmill.org/skyfield/">Skyfiled</a> libraries.<br/><br/>
-        These libraries can be installed by running the OSGeo4W shell as system administrator and running 'pip install skyfield timezonefinder' or whatever method you use to install python packages.<p>
+        These libraries can be installed by running the OSGeo4W shell and running 'pip install skyfield timezonefinder' or whatever method you use to install python packages.<p>
         <p>Once the libraries are installed, please restart QGIS.</p>
         '''
         QMessageBox.information(self.iface.mainWindow(), 'Plugin Requirements not Satisfied', message)
