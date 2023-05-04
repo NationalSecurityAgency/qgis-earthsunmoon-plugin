@@ -2,7 +2,7 @@
 name=Earth, Sun, Moon, and Planets
 qgisMinimumVersion=3.14
 description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time. (Note the Python library dependencies.)
-version=3.0.1
+version=3.0.2
 author=C Hamilton
 email=adenaculture@gmail.com
 about=
@@ -17,6 +17,8 @@ category=Plugins
 icon=icon.png
 experimental=False
 deprecated=False
+hasProcessingProvider=yes
 changelog=
+    3.0.2 - Fix to allow qgis_process to function correctly.
     3.0.1 - Fix exception when libraries are not installed
     3.0.0 - First release
