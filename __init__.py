@@ -6,4 +6,4 @@ def classFactory(iface):
     else:
         # This is used when the plugin is loaded from the command line command qgis_process
         from .earthsunmoonprocessing import EarthSunMoon
-        return EarthSunMoon(iface)
+        return EarthSunMoon()

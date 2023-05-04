@@ -12,10 +12,6 @@ except Exception:
     libraries_found = False
 
 class EarthSunMoon(object):
-    solarInfoDialog = None
-    ephemInfoDialog = None
-    settingsDialog = None
-
     def __init__(self):
         self.provider = None
 
