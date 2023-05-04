@@ -93,7 +93,7 @@ class PlanetPositionsAlgorithm(QgsProcessingAlgorithm):
         f = self.returnPlanetaryZenith('Pluto Barycenter', eph, earth, t_utc, dt, utc)
         sink.addFeature(f)
 
-        if auto_style:
+        if auto_style and context.willLoadLayerOnCompletion(dest_id):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
         return {self.PrmOutputLayer: dest_id}

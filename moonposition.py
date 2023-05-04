@@ -85,7 +85,7 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
         pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
         feat.setGeometry(QgsGeometry.fromPointXY(pt))
         sink.addFeature(feat)
-        if auto_style:
+        if auto_style and context.willLoadLayerOnCompletion(dest_id):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
         return {self.PrmOutputLayer: dest_id}
