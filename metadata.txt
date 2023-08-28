@@ -1,17 +1,17 @@
 [general]
 name=Earth, Sun, Moon, and Planets
 qgisMinimumVersion=3.14
-description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time. (Note the Python library dependencies.)
-version=3.0.2
+description=Tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time. (Note the Python library enhancements.)
+version=3.0.3
 author=C Hamilton
 email=adenaculture@gmail.com
 about=
-    This plugin requires two Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system administrator to do this. 
+    Enhance this plugin with two Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system administrator to do this. Without adding in these libraries, the only algorithms available are the "Day/Night terminator" and "Sun position directly overhead"
 
-    This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time.
+    This plugin provides tools to calculate the positions of the sun, moon, and planets when viewed from directly overhead for a particular date and time. It displays solar and lunar information for a coordinate at the specified date and time. It will produce the day/night terminator line, and twlight polygons.
 tracker=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin/issues
 repository=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin
-tags=time,conversion,sun,moon,planet,planets,date,dawn,sunrise,noon,sunset,dusk,weekday,mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto
+tags=time,conversion,sun,moon,planet,planets,date,dawn,sunrise,noon,sunset,dusk,weekday,mercury,venus,earth,mars,jupiter,saturn,uranus,neptune,pluto,terminator line,astornomical,civil,nautical,twilight
 homepage=https://github.com/NationalSecurityAgency/qgis-earthsunmoon-plugin
 category=Plugins
 icon=icon.png
@@ -19,6 +19,7 @@ experimental=False
 deprecated=False
 hasProcessingProvider=yes
 changelog=
+    3.0.3 - Add day/night boundry lines and polygons
     3.0.2 - Fix to allow qgis_process to function correctly.
     3.0.1 - Fix exception when libraries are not installed
     3.0.0 - First release
