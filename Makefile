@@ -1,6 +1,6 @@
 PLUGINNAME = earthsunmoon
 PLUGINS = "$(HOME)"/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins/$(PLUGINNAME)
-PY_FILES = __init__.py captureCoordinate.py dms.py earthsunmoon.py earthsunmoonprocessing.py ephemInfo.py infoDialog.py moonposition.py planetpositions.py provider.py sunposition.py utils.py wintz.py 
+PY_FILES = __init__.py captureCoordinate.py daynight.py dms.py earthsunmoon.py earthsunmoonprocessing.py ephemInfo.py infoDialog.py moonposition.py planetpositions.py provider_limited.py provider.py sunposition.py sunposition_limited.py terminator.py utils.py wintz.py 
 EXTRAS = metadata.txt icon.png
 
 deploy: 
