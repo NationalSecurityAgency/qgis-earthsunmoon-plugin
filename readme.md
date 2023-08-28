@@ -1,11 +1,11 @@
 # Earth, Sun, Moon, and Planets Plugin
 
-This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
+This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The ***Day/Night terminator*** algorithm plots the day/night terminator line and polygon layers associate with sunrise/set, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
 
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
 ## Installation
-This plugin requires two additional libraries not provided by QGIS. These can be installed by opening up your OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
+Other than for the ***Day/Night terminator*** algorithm, this plugin requires two additional libraries not provided by QGIS. These can be installed by opening up your OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
 
 You do not need to be a system administrator to be able to install these libraries.
 
@@ -13,6 +13,7 @@ You do not need to be a system administrator to be able to install these librari
 
 These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
 
+* <img src="icons/daynight.png" width=24 height=24 alt="Sun position directly overhead"> ***Day/Night terminator*** - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometery like the web based maps that you find on-line.
 * <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> ***Sun position directly overhead*** - This shows the location of the sun where it is directly overhead for a particular date and time.
 * <img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> ***Moon position directly overhead*** - This shows the location of the moon where it is directly overhead for a particular date and time.
 * <img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> ***Planetary positions directly overhead*** - This shows the location of the planets where they are directly overhead for a particular date and time.
