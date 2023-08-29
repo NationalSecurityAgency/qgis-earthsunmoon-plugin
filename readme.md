@@ -5,22 +5,51 @@ This plugin uses the highly accurate Skyfield library to show where the sun, moo
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
 ## Installation
-Other than for the ***Day/Night terminator*** algorithm, this plugin requires two additional libraries not provided by QGIS. These can be installed by opening up your OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
+This plugin requires two additional libraries not provided by QGIS except for the ***Day/Night terminator*** and ***Sun position directly overhead*** algorithms. These libraries can be installed by running the OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
 
-You do not need to be a system administrator to be able to install these libraries.
+You do not need to be a system administrator to be able to install these libraries. If these libraries are not installed then the functionality will be limited to the following two capabilities.
+
+<div style="text-align:center"><img src="doc/menu_limited.jpg" alt="Plugin menu"></div>
 
 ## Tools Overview
 
 These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
 
-* <img src="icons/daynight.png" width=24 height=24 alt="Sun position directly overhead"> ***Day/Night terminator*** - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometery like the web based maps that you find on-line.
-* <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> ***Sun position directly overhead*** - This shows the location of the sun where it is directly overhead for a particular date and time.
+* <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> ***Day/Night terminator*** - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.
+* <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> ***Sun position directly overhead*** - This shows the location of the sun where it is directly overhead for a particular date and time. If the Skyfield library is not installed, then this algorithm uses a slightly less accurate spherical calculation for the sun's position.
 * <img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> ***Moon position directly overhead*** - This shows the location of the moon where it is directly overhead for a particular date and time.
 * <img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> ***Planetary positions directly overhead*** - This shows the location of the planets where they are directly overhead for a particular date and time.
 * <img src="icons/ephem.svg" alt="Ephemeris information"> ***Ephemeris information*** - This provides information about the selected ephemeris file. This plugin includes limited ephemeris data for the dates 1990-2040. For dates outside this range other ephemeris files can be downloaded from the <a href="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/">JPL Ephemeris page</a>. These can be installed from the ***Settings*** menu.
 * <img src="doc/settings.png" width=24 height=24 alt="Settings"> ***Settings*** - Plugin settings.
 
-As an example this is the dialog for the algorithm to calculate the sun directly overhead.
+## <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> Day/Night terminator
+
+This algorithm creates vector layers for the position of the sun directly overhead, day/night terminator line, and polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight. This is the associated dialog box.
+
+<div style="text-align:center"><img src="doc/terminator.jpg" alt="Day/Night terminator"></div>
+
+The input parameters are as follows:
+* ***Set date and time*** - This will automatically be initialized to the current date, time, and timezone of your computer. Internally it converts the date and time to UTC for all the calculations.
+* ***Show sun position*** - This will create a point for the position of the sun where it is directly overhead.
+* ***Show day/night terminator line*** - This is the terminating vector line representing the boundary between sunrise and sunset.
+* ***Sunrise, Sunset*** - This is a polygon of the day/night, sunrise/sunset dark region.
+* ***Civil Twilight*** - This is a polygon of the civil twilight region.
+* ***Nautical Twilight*** - This is a polygon of the nautical twilight region.
+* ***Astronomical Twilight*** - This is a polygon of the astronomical twilight region.
+* ***Delta/resolution of polygon*** - This determines the number of points used to create the lines and polygons. The larger the number the less accurate it will be. The default value of 1.0 probably does not need to be changed in most instances.
+* ***Add solar disk diameter for day/night terminator calculation*** - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. What is most accurate? It really depends on your definition of the day/night terminator line. By default this is not checked.
+* ***Automatically style output*** - When checked, the resulting output layers are nicely styled.
+* ***Clip polygons to project CRS bounds*** - The output vector layers coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.
+
+Here is an example of what is generated with automatic styling.
+
+<div style="text-align:center"><img src="doc/day_night.jpg" alt="Day/Night"></div>
+
+The attribute tables give the name of the feature, its computer date and time, and the UTC string of the date and time.
+
+## <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> Sun position directly overhead
+
+This is the dialog for the algorithm to calculate the sun directly overhead.
 
 <div style="text-align:center"><img src="doc/sunalg.jpg" alt="Sun position directly overhead"></div>
 
@@ -32,7 +61,7 @@ This shows the locations of the sun, moon, and planets.
 
 <div style="text-align:center"><img src="doc/sunmoonplanets.jpg" alt="Sun moon planets"></div>
 
-The attributes table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.
+The attribute table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.
 
 <div style="text-align:center"><img src="doc/attributes.jpg" alt="Attributes"></div>
 
@@ -42,7 +71,7 @@ The user can click on the <img src="icons/coordCapture.svg" alt="coordinate capt
 
 <div style="text-align:center"><img src="doc/info.jpg" alt="Info"></div>
 
-The ***Now*** icon <img src="icons/CurrentTime.png" width=24 height=24 alt="Now"> will set the date and time to the current computer time. The ***Use UTC*** check box displays the date and times in UTC; otherwise, they are displayed using the selected time zone as follows.
+The ***Now*** icon <img src="icons/CurrentTime.png" width=24 height=24 alt="Now"> will set the date and time to the current computer time. The ***Use UTC*** check box displays the date and times in UTC; otherwise, they are displayed using the selected time zone.
 
 <div style="text-align:center"><img src="doc/info2.jpg" alt="Info"></div>
 
