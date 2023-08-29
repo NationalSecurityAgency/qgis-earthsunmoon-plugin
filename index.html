@@ -37,18 +37,18 @@ code {
 </head>
 <body>
 <h1>Earth, Sun, Moon, and Planets Plugin</h1>
-<p>This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The <strong><em>Day/Night terminator</em></strong> algorithm plots the day/night terminator line and polygon layers associate with sunrise/set, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under <strong><em>Plugins-&gt;Earth, sun, moon &amp; planets</em></strong>. </p>
+<p>This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The <strong><em>Day/Night terminator</em></strong> algorithm plots the day/night terminator line and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under <strong><em>Plugins-&gt;Earth, sun, moon &amp; planets</em></strong>. </p>
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
 <h2>Installation</h2>
-<p>This plugin requires two additional libraries not provided by QGIS except for the <strong><em>Day/Night terminator</em></strong> and <strong><em>Sun position directly overhead</em></strong> algorithms. These libraries can be installed by running the OSGeo4W Shell and typing the command "<strong>pip install timezonefinder skyfield</strong>" or whatever method you use to install Python libraries.</p>
+<p>This plugin can be enhanced with two additional python libraries not provided by QGIS. Without the extra libraries only the <strong><em>Day/Night terminator</em></strong> and <strong><em>Sun position directly overhead</em></strong> algorithms will be available. These libraries can be installed by running the OSGeo4W Shell and typing the command "<strong>pip install timezonefinder skyfield</strong>" or whatever method you use to install Python libraries.</p>
 <p>You do not need to be a system administrator to be able to install these libraries. If these libraries are not installed then the functionality will be limited to the following two capabilities.</p>
 <div style="text-align:center"><img src="doc/menu_limited.jpg" alt="Plugin menu"></div>
 
 <h2>Tools Overview</h2>
 <p>These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:</p>
 <ul>
-<li><img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> <strong><em>Day/Night terminator</em></strong> - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.</li>
+<li><img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> <strong><em>Day/Night terminator</em></strong> - This algorithm creates vector layers for the day/night terminator line, polygon layers associated with sunrise/sunset, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.</li>
 <li><img src="icons/sun_icon.svg" alt="Sun position directly overhead"> <strong><em>Sun position directly overhead</em></strong> - This shows the location of the sun where it is directly overhead for a particular date and time. If the Skyfield library is not installed, then this algorithm uses a slightly less accurate spherical calculation for the sun's position.</li>
 <li><img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> <strong><em>Moon position directly overhead</em></strong> - This shows the location of the moon where it is directly overhead for a particular date and time.</li>
 <li><img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> <strong><em>Planetary positions directly overhead</em></strong> - This shows the location of the planets where they are directly overhead for a particular date and time.</li>
@@ -67,10 +67,10 @@ code {
 * <strong><em>Civil Twilight</em></strong> - This is a polygon of the civil twilight region.
 * <strong><em>Nautical Twilight</em></strong> - This is a polygon of the nautical twilight region.
 * <strong><em>Astronomical Twilight</em></strong> - This is a polygon of the astronomical twilight region.
-* <strong><em>Delta/resolution of polygon</em></strong> - This determines the number of points used to create the lines and polygons. The larger the number the less accurate it will be. The default value of 1.0 probably does not need to be changed in most instances.
-* <strong><em>Add solar disk diameter for day/night terminator calculation</em></strong> - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. What is most accurate? It really depends on your definition of the day/night terminator line. By default this is not checked.
+* <strong><em>Delta/resolution of polygon</em></strong> - This determines the number of points used to create the lines and polygons. A larger number means fewer points and less accuracy. The default value of 1.0 probably does not need to be changed in most instances.
+* <strong><em>Add solar disk diameter for day/night terminator calculation</em></strong> - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. Should you check this box? It really depends on your definition of the day/night terminator line. By default it is not checked.
 * <strong><em>Automatically style output</em></strong> - When checked, the resulting output layers are nicely styled.
-* <strong><em>Clip polygons to project CRS bounds</em></strong> - The output vector layers coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.</p>
+* <strong><em>Clip polygons to project CRS bounds</em></strong> - The output vector layer's coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.</p>
 <p>Here is an example of what is generated with automatic styling.</p>
 <div style="text-align:center"><img src="doc/day_night.jpg" alt="Day/Night"></div>
 

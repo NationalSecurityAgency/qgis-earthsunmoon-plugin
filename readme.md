@@ -1,11 +1,11 @@
 # Earth, Sun, Moon, and Planets Plugin
 
-This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The ***Day/Night terminator*** algorithm plots the day/night terminator line and polygon layers associate with sunrise/set, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
+This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The ***Day/Night terminator*** algorithm plots the day/night terminator line and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
 
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
 ## Installation
-This plugin requires two additional libraries not provided by QGIS except for the ***Day/Night terminator*** and ***Sun position directly overhead*** algorithms. These libraries can be installed by running the OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
+This plugin can be enhanced with two additional python libraries not provided by QGIS. Without the extra libraries only the ***Day/Night terminator*** and ***Sun position directly overhead*** algorithms will be available. These libraries can be installed by running the OSGeo4W Shell and typing the command "**pip install timezonefinder skyfield**" or whatever method you use to install Python libraries.
 
 You do not need to be a system administrator to be able to install these libraries. If these libraries are not installed then the functionality will be limited to the following two capabilities.
 
@@ -15,7 +15,7 @@ You do not need to be a system administrator to be able to install these librari
 
 These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
 
-* <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> ***Day/Night terminator*** - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.
+* <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> ***Day/Night terminator*** - This algorithm creates vector layers for the day/night terminator line, polygon layers associated with sunrise/sunset, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.
 * <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> ***Sun position directly overhead*** - This shows the location of the sun where it is directly overhead for a particular date and time. If the Skyfield library is not installed, then this algorithm uses a slightly less accurate spherical calculation for the sun's position.
 * <img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> ***Moon position directly overhead*** - This shows the location of the moon where it is directly overhead for a particular date and time.
 * <img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> ***Planetary positions directly overhead*** - This shows the location of the planets where they are directly overhead for a particular date and time.
@@ -36,10 +36,10 @@ The input parameters are as follows:
 * ***Civil Twilight*** - This is a polygon of the civil twilight region.
 * ***Nautical Twilight*** - This is a polygon of the nautical twilight region.
 * ***Astronomical Twilight*** - This is a polygon of the astronomical twilight region.
-* ***Delta/resolution of polygon*** - This determines the number of points used to create the lines and polygons. The larger the number the less accurate it will be. The default value of 1.0 probably does not need to be changed in most instances.
-* ***Add solar disk diameter for day/night terminator calculation*** - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. What is most accurate? It really depends on your definition of the day/night terminator line. By default this is not checked.
+* ***Delta/resolution of polygon*** - This determines the number of points used to create the lines and polygons. A larger number means fewer points and less accuracy. The default value of 1.0 probably does not need to be changed in most instances.
+* ***Add solar disk diameter for day/night terminator calculation*** - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. Should you check this box? It really depends on your definition of the day/night terminator line. By default it is not checked.
 * ***Automatically style output*** - When checked, the resulting output layers are nicely styled.
-* ***Clip polygons to project CRS bounds*** - The output vector layers coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.
+* ***Clip polygons to project CRS bounds*** - The output vector layer's coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.
 
 Here is an example of what is generated with automatic styling.
 
