@@ -24,7 +24,7 @@ These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
 
 ## <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> Day/Night terminator
 
-This algorithm creates vector layers for the position of the sun directly overhead, day/night terminator line, and polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight. This is the associated dialog box.
+This algorithm creates vector layers for the position of the sun directly overhead, day/night terminator line, and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight and astronomical twilight. This is the associated dialog box.
 
 <div style="text-align:center"><img src="doc/terminator.jpg" alt="Day/Night terminator"></div>
 
