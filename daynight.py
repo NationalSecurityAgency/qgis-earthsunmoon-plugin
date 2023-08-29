@@ -37,6 +37,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
     PrmDelta = 'Delta'
     PrmClipToCRS = 'ClipToCRS'
     PrmDayNightLine = 'DayNightLine'
+    PrmSolarDisk = 'SolarDisk'
 
     def initAlgorithm(self, config):
 
@@ -104,6 +105,13 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
         )
         self.addParameter(
             QgsProcessingParameterBoolean(
+                self.PrmSolarDisk,
+                'Add solar disk diameter for day/night terminator calculation',
+                False,
+                optional=False)
+        )
+        self.addParameter(
+            QgsProcessingParameterBoolean(
                 self.PrmStyle,
                 'Automatically style output',
                 True,
@@ -134,6 +142,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
 
     def processAlgorithm(self, parameters, context, feedback):
         style_layer = self.parameterAsBool(parameters, self.PrmStyle, context)
+        solar_disk = self.parameterAsBool(parameters, self.PrmSolarDisk, context)
         clip_to_crs = self.parameterAsBool(parameters, self.PrmClipToCRS, context)
         show_sun = self.parameterAsBool(parameters, self.PrmShowSun, context)
         day_night_line = self.parameterAsBool(parameters, self.PrmDayNightLine, context)
@@ -173,11 +182,16 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
             feat.setGeometry(QgsGeometry.fromPointXY(pt))
             sink_sun.addFeature(feat)
 
+        if solar_disk:
+            sun_width = 0.833
+        else:
+            sun_width = 0
+
         if day_night_line:
             (sink_line, dest_id_line) = self.parameterAsSink(
                 parameters, self.PrmOutputLine, context, f,
                 QgsWkbTypes.LineString, epsg4326)
-            geom = self.dayNightLineGeom(utc, delta, project_bounds)
+            geom = self.dayNightLineGeom(utc, delta, project_bounds, sun_width)
             attr = ['Day/Night Line', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
             feat = QgsFeature()
             feat.setAttributes(attr)
@@ -191,7 +205,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
                 QgsWkbTypes.MultiPolygon, epsg4326)
 
         if sunrise_sunset:
-            t = Terminator(utc, delta=delta, refraction=0)
+            t = Terminator(utc, delta=delta, refraction=sun_width)
             geom = self.arrayToGeom(t.polygons, project_bounds)
             if geom:
                 attr = ['Day/Night', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
@@ -247,8 +261,8 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
 
         return(r)
 
-    def dayNightLineGeom(self, utc: datetime, delta: float, project_bounds=None):
-        t = Terminator(utc, delta=delta, refraction=0)
+    def dayNightLineGeom(self, utc: datetime, delta: float, project_bounds=None, sun_width: float=0):
+        t = Terminator(utc, delta=delta, refraction=sun_width)
         # We will only have one terminator polygon with refraction=0
         p = t.edges[0]
         pts = []
