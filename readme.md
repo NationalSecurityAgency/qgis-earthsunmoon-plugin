@@ -29,6 +29,7 @@ This algorithm creates vector layers for the position of the sun directly overhe
 <div style="text-align:center"><img src="doc/terminator.jpg" alt="Day/Night terminator"></div>
 
 The input parameters are as follows:
+
 * ***Set date and time*** - This will automatically be initialized to the current date, time, and timezone of your computer. Internally it converts the date and time to UTC for all the calculations.
 * ***Show sun position*** - This will create a point for the position of the sun where it is directly overhead.
 * ***Show day/night terminator line*** - This is the terminating vector line representing the boundary between sunrise and sunset.

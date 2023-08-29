@@ -59,18 +59,20 @@ code {
 <p>This algorithm creates vector layers for the position of the sun directly overhead, day/night terminator line, and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight and astronomical twilight. This is the associated dialog box.</p>
 <div style="text-align:center"><img src="doc/terminator.jpg" alt="Day/Night terminator"></div>
 
-<p>The input parameters are as follows:
-* <strong><em>Set date and time</em></strong> - This will automatically be initialized to the current date, time, and timezone of your computer. Internally it converts the date and time to UTC for all the calculations.
-* <strong><em>Show sun position</em></strong> - This will create a point for the position of the sun where it is directly overhead.
-* <strong><em>Show day/night terminator line</em></strong> - This is the terminating vector line representing the boundary between sunrise and sunset.
-* <strong><em>Sunrise, Sunset</em></strong> - This is a polygon of the day/night, sunrise/sunset dark region.
-* <strong><em>Civil Twilight</em></strong> - This is a polygon of the civil twilight region.
-* <strong><em>Nautical Twilight</em></strong> - This is a polygon of the nautical twilight region.
-* <strong><em>Astronomical Twilight</em></strong> - This is a polygon of the astronomical twilight region.
-* <strong><em>Delta/resolution of polygon</em></strong> - This determines the number of points used to create the lines and polygons. A larger number means fewer points and less accuracy. The default value of 1.0 probably does not need to be changed in most instances.
-* <strong><em>Add solar disk diameter for day/night terminator calculation</em></strong> - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. Should you check this box? It really depends on your definition of the day/night terminator line. By default it is not checked.
-* <strong><em>Automatically style output</em></strong> - When checked, the resulting output layers are nicely styled.
-* <strong><em>Clip polygons to project CRS bounds</em></strong> - The output vector layer's coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.</p>
+<p>The input parameters are as follows:</p>
+<ul>
+<li><strong><em>Set date and time</em></strong> - This will automatically be initialized to the current date, time, and timezone of your computer. Internally it converts the date and time to UTC for all the calculations.</li>
+<li><strong><em>Show sun position</em></strong> - This will create a point for the position of the sun where it is directly overhead.</li>
+<li><strong><em>Show day/night terminator line</em></strong> - This is the terminating vector line representing the boundary between sunrise and sunset.</li>
+<li><strong><em>Sunrise, Sunset</em></strong> - This is a polygon of the day/night, sunrise/sunset dark region.</li>
+<li><strong><em>Civil Twilight</em></strong> - This is a polygon of the civil twilight region.</li>
+<li><strong><em>Nautical Twilight</em></strong> - This is a polygon of the nautical twilight region.</li>
+<li><strong><em>Astronomical Twilight</em></strong> - This is a polygon of the astronomical twilight region.</li>
+<li><strong><em>Delta/resolution of polygon</em></strong> - This determines the number of points used to create the lines and polygons. A larger number means fewer points and less accuracy. The default value of 1.0 probably does not need to be changed in most instances.</li>
+<li><strong><em>Add solar disk diameter for day/night terminator calculation</em></strong> - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. Should you check this box? It really depends on your definition of the day/night terminator line. By default it is not checked.</li>
+<li><strong><em>Automatically style output</em></strong> - When checked, the resulting output layers are nicely styled.</li>
+<li><strong><em>Clip polygons to project CRS bounds</em></strong> - The output vector layer's coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.</li>
+</ul>
 <p>Here is an example of what is generated with automatic styling.</p>
 <div style="text-align:center"><img src="doc/day_night.jpg" alt="Day/Night"></div>
 
@@ -145,4 +147,4 @@ code {
 −13200 to 17191<br/>
 3.1 GB</td>
 </tr>
-</table></body>
+</tabl</body>
