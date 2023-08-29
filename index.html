@@ -37,22 +37,46 @@ code {
 </head>
 <body>
 <h1>Earth, Sun, Moon, and Planets Plugin</h1>
-<p>This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. When installed, this plugin can be found in the QGIS menu under <strong><em>Plugins-&gt;Earth, sun, moon &amp; planets</em></strong>. </p>
+<p>This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The <strong><em>Day/Night terminator</em></strong> algorithm plots the day/night terminator line and polygon layers associate with sunrise/set, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under <strong><em>Plugins-&gt;Earth, sun, moon &amp; planets</em></strong>. </p>
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
 <h2>Installation</h2>
-<p>This plugin requires two additional libraries not provided by QGIS. These can be installed by opening up your OSGeo4W Shell and typing the command "<strong>pip install timezonefinder skyfield</strong>" or whatever method you use to install Python libraries.</p>
-<p>You do not need to be a system administrator to be able to install these libraries.</p>
+<p>This plugin requires two additional libraries not provided by QGIS except for the <strong><em>Day/Night terminator</em></strong> and <strong><em>Sun position directly overhead</em></strong> algorithms. These libraries can be installed by running the OSGeo4W Shell and typing the command "<strong>pip install timezonefinder skyfield</strong>" or whatever method you use to install Python libraries.</p>
+<p>You do not need to be a system administrator to be able to install these libraries. If these libraries are not installed then the functionality will be limited to the following two capabilities.</p>
+<div style="text-align:center"><img src="doc/menu_limited.jpg" alt="Plugin menu"></div>
+
 <h2>Tools Overview</h2>
 <p>These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:</p>
 <ul>
-<li><img src="icons/sun_icon.svg" alt="Sun position directly overhead"> <strong><em>Sun position directly overhead</em></strong> - This shows the location of the sun where it is directly overhead for a particular date and time.</li>
+<li><img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> <strong><em>Day/Night terminator</em></strong> - This algorithm creates vector layers for the day/night terminator line, polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight, and the position of the sun directly overhead. Unlike the other algorithms below this does not depend on the Skyfield library. It uses spherical geometry like the web based maps that you find on-line.</li>
+<li><img src="icons/sun_icon.svg" alt="Sun position directly overhead"> <strong><em>Sun position directly overhead</em></strong> - This shows the location of the sun where it is directly overhead for a particular date and time. If the Skyfield library is not installed, then this algorithm uses a slightly less accurate spherical calculation for the sun's position.</li>
 <li><img src="icons/moon.png" width=24 height=24 alt="Moon position directly overhead"> <strong><em>Moon position directly overhead</em></strong> - This shows the location of the moon where it is directly overhead for a particular date and time.</li>
 <li><img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> <strong><em>Planetary positions directly overhead</em></strong> - This shows the location of the planets where they are directly overhead for a particular date and time.</li>
 <li><img src="icons/ephem.svg" alt="Ephemeris information"> <strong><em>Ephemeris information</em></strong> - This provides information about the selected ephemeris file. This plugin includes limited ephemeris data for the dates 1990-2040. For dates outside this range other ephemeris files can be downloaded from the <a href="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/">JPL Ephemeris page</a>. These can be installed from the <strong><em>Settings</em></strong> menu.</li>
 <li><img src="doc/settings.png" width=24 height=24 alt="Settings"> <strong><em>Settings</em></strong> - Plugin settings.</li>
 </ul>
-<p>As an example this is the dialog for the algorithm to calculate the sun directly overhead.</p>
+<h2><img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> Day/Night terminator</h2>
+<p>This algorithm creates vector layers for the position of the sun directly overhead, day/night terminator line, and polygon layers associate with sunrise/set, civil twilight, nautical twilight and astronomical twilight. This is the associated dialog box.</p>
+<div style="text-align:center"><img src="doc/terminator.jpg" alt="Day/Night terminator"></div>
+
+<p>The input parameters are as follows:
+* <strong><em>Set date and time</em></strong> - This will automatically be initialized to the current date, time, and timezone of your computer. Internally it converts the date and time to UTC for all the calculations.
+* <strong><em>Show sun position</em></strong> - This will create a point for the position of the sun where it is directly overhead.
+* <strong><em>Show day/night terminator line</em></strong> - This is the terminating vector line representing the boundary between sunrise and sunset.
+* <strong><em>Sunrise, Sunset</em></strong> - This is a polygon of the day/night, sunrise/sunset dark region.
+* <strong><em>Civil Twilight</em></strong> - This is a polygon of the civil twilight region.
+* <strong><em>Nautical Twilight</em></strong> - This is a polygon of the nautical twilight region.
+* <strong><em>Astronomical Twilight</em></strong> - This is a polygon of the astronomical twilight region.
+* <strong><em>Delta/resolution of polygon</em></strong> - This determines the number of points used to create the lines and polygons. The larger the number the less accurate it will be. The default value of 1.0 probably does not need to be changed in most instances.
+* <strong><em>Add solar disk diameter for day/night terminator calculation</em></strong> - The sun is not a point but a disk and this compensates for the day/night terminator with a refraction index of 0.833. What is most accurate? It really depends on your definition of the day/night terminator line. By default this is not checked.
+* <strong><em>Automatically style output</em></strong> - When checked, the resulting output layers are nicely styled.
+* <strong><em>Clip polygons to project CRS bounds</em></strong> - The output vector layers coordinate reference is EPSG:4326 with longitude going from -180 to 180 degrees and latitude from -90 to 90 degrees. If you are using some other CRS and this is checked, then the resulting layers will be clipped to the project CRS.</p>
+<p>Here is an example of what is generated with automatic styling.</p>
+<div style="text-align:center"><img src="doc/day_night.jpg" alt="Day/Night"></div>
+
+<p>The attribute tables give the name of the feature, its computer date and time, and the UTC string of the date and time.</p>
+<h2><img src="icons/sun_icon.svg" alt="Sun position directly overhead"> Sun position directly overhead</h2>
+<p>This is the dialog for the algorithm to calculate the sun directly overhead.</p>
 <div style="text-align:center"><img src="doc/sunalg.jpg" alt="Sun position directly overhead"></div>
 
 <p>The moon and planets are the same. This shows what this algorithm produces when this algorithm is run.</p>
@@ -61,14 +85,14 @@ code {
 <p>This shows the locations of the sun, moon, and planets.</p>
 <div style="text-align:center"><img src="doc/sunmoonplanets.jpg" alt="Sun moon planets"></div>
 
-<p>The attributes table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.</p>
+<p>The attribute table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.</p>
 <div style="text-align:center"><img src="doc/attributes.jpg" alt="Attributes"></div>
 
 <h2><img src="icons/info.svg" alt="Solar/lunar information"> Solar/lunar information</h2>
 <p>The user can click on the <img src="icons/coordCapture.svg" alt="coordinate capture"> coordinate capture icon and click on the map. This dialog is then populated with the following details. The timezone is automatically selected based on the coordinate.</p>
 <div style="text-align:center"><img src="doc/info.jpg" alt="Info"></div>
 
-<p>The <strong><em>Now</em></strong> icon <img src="icons/CurrentTime.png" width=24 height=24 alt="Now"> will set the date and time to the current computer time. The <strong><em>Use UTC</em></strong> check box displays the date and times in UTC; otherwise, they are displayed using the selected time zone as follows.</p>
+<p>The <strong><em>Now</em></strong> icon <img src="icons/CurrentTime.png" width=24 height=24 alt="Now"> will set the date and time to the current computer time. The <strong><em>Use UTC</em></strong> check box displays the date and times in UTC; otherwise, they are displayed using the selected time zone.</p>
 <div style="text-align:center"><img src="doc/info2.jpg" alt="Info"></div>
 
 <h2><img src="icons/ephem.svg" alt="Ephemeris information"> Ephemeris Information</h2>
