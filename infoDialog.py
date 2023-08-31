@@ -257,9 +257,16 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
     @pyqtSlot(QgsPointXY)
     def capturedPoint(self, pt):
         # print('capturedPoint')
+        lon = pt.x()
+        lat = pt.y()
+        if lat > 90 or lat < -90 or lon > 180 or lon < -180:
+            self.cur_location = None
+            self.coordLineEdit.setText('')
+            self.updateSunInfo()
+            return
         if self.isVisible() and self.coordCaptureButton.isChecked():
             self.cur_location = pt
-            self.cur_tzname = self.tzf.timezone_at(lng=pt.x(), lat=pt.y())
+            self.cur_tzname = self.tzf.timezone_at(lng=lon, lat=lat)
             self.tz = timezone(self.cur_tzname)
             self.updateSunInfo()
         else:
