@@ -11,7 +11,7 @@ from skyfield import almanac
 from .wintz import win_tz_map
 from .utils import settings
 
-import traceback
+# import traceback
 group_name = 'Earth Sun Moon'
 
 def InitFunctions():
@@ -77,7 +77,7 @@ def esm_moon_phase(values, feature, parent):
 
     <h4>Arguments</h4>
     <p><i>datetime</i> &rarr; this can be a native QGIS QDateTime, a python datetime, or a timestamp in ms.</p>
-    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp then it is assumed to be UTC. If it is a python datetime format or QDateTime format then the value is checked to see if there is an associated timezone to use. If not UTC is used.</p>
+    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp, then it is assumed to be UTC. If it is a python datetime format or QDateTime format, then the datetime is checked to see if there is an associated timezone to use. If not, UTC is used.</p>
     
     <h4>Example usage</h4>
     <ul>
@@ -117,7 +117,7 @@ def esm_sun_zenith(values, feature, parent):
 
     <h4>Arguments</h4>
     <p><i>datetime</i> &rarr; this can be a native QGIS QDateTime, a python datetime, or a timestamp in ms.</p>
-    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp then it is assumed to be UTC. If it is a python datetime format or QDateTime format then the value is checked to see if there is an associated timezone to use. If not UTC is used.</p>
+    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp, then it is assumed to be UTC. If it is a python datetime format or QDateTime format, then the datetime is checked to see if there is an associated timezone to use. If not, UTC is used.</p>
     
     <h4>Example usage</h4>
     <ul>
@@ -146,12 +146,10 @@ def esm_sun_zenith(values, feature, parent):
             sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
         except Exception:
             parent.setEvalErrorString("The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.")
-            traceback.print_exc()
             return
         pt = QgsPointXY(sun_position.longitude.degrees, sun_position.latitude.degrees)
         return(QgsGeometry.fromPointXY(pt))
     except Exception:
-        traceback.print_exc()
         parent.setEvalErrorString("Error: datetime, timezone error in calculation moon phase")
         return
 
@@ -165,7 +163,7 @@ def esm_moon_zenith(values, feature, parent):
 
     <h4>Arguments</h4>
     <p><i>datetime</i> &rarr; this can be a native QGIS QDateTime, a python datetime, or a timestamp in ms.</p>
-    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp then it is assumed to be UTC. If it is a python datetime format or QDateTime format then the value is checked to see if there is an associated timezone to use. If not UTC is used.</p>
+    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp, then it is assumed to be UTC. If it is a python datetime format or QDateTime format, then the datetime is checked to see if there is an associated timezone to use. If not, UTC is used.</p>
     
     <h4>Example usage</h4>
     <ul>
@@ -194,19 +192,17 @@ def esm_moon_zenith(values, feature, parent):
             moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
         except Exception:
             parent.setEvalErrorString("The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.")
-            traceback.print_exc()
             return
         pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
         return(QgsGeometry.fromPointXY(pt))
     except Exception:
-        traceback.print_exc()
         parent.setEvalErrorString("Error: datetime, timezone error in calculation moon phase")
         return
 
 @qgsfunction(-1, group=group_name)
 def esm_sun_moon_info(values, feature, parent):
     """
-    Given a date and time, latitude and longitude in EPSG:4326, output format type, and optional timezone of the date and time value, it returns a python dictionary or json string of the output solar and lunar informatioin.
+    Given a date and time, latitude and longitude in EPSG:4326, output format type, and optional timezone of the date and time object, it returns a python dictionary or JSON string of solar and lunar information. If you want to avoing all confusion, use UTC as the datetime timezone.
 
     <h4>Syntax</h4>
     <p><b>esm_sun_moon_info</b>( <i>datetime, latitude, longitude[, output_type, tz_name]</i> )</p>
@@ -216,7 +212,7 @@ def esm_sun_moon_info(values, feature, parent):
     <p><i>latitude</i> &rarr; latitude of reference point in EPSG:4326.</p>
     <p><i>longitude</i> &rarr; longitude of reference point in EPSG:4326.</p>
     <p><i>output_type</i> &rarr; output type with 'dict' returning a python dictionary and 'json' returning a json formatted string. The default is 'dict'.</p>
-    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp then it is assumed to be UTC. If it is a python datetime format or QDateTime format then the value is checked to see if there is an associated timezone to use. If not UTC is used.</p>
+    <p><i>tz_name</i> &rarr; optional timezone IANA formatted string such as 'UTC' or 'America/New_York'. If not specified and the input is a timestamp, then it is assumed to be UTC. If it is a python datetime format or QDateTime format, then the datetime is checked to see if there is an associated timezone to use. If not, UTC is used.</p>
     
     <h4>Example usage</h4>
     <ul>
@@ -321,14 +317,13 @@ def esm_sun_moon_info(values, feature, parent):
         else:
             return(json.dumps(info, indent = 1))
     except Exception:
-        traceback.print_exc()
         parent.setEvalErrorString("Error: datetime, timezone error in calculation moon phase")
         return
 
 @qgsfunction(args='auto', group=group_name)
 def esm_local_datetime(feature, parent):
     """
-    Return a python local datetime.
+    Returns the current date and time as a python datetime object with the local computer's timezone settings.
 
     <h4>Syntax</h4>
     <p><b>esm_local_datetime</b>( )</p>
@@ -337,7 +332,7 @@ def esm_local_datetime(feature, parent):
     <p>None</p>
     <h4>Example usage</h4>
     <ul>
-      <li><b>esm_local_datetime</b>() &rarr; returns local python datetime with timezone set</li>
+      <li><b>esm_local_datetime</b>() &rarr; returns a local python datetime with timezone set</li>
     </ul>
     """
     try:
@@ -347,14 +342,13 @@ def esm_local_datetime(feature, parent):
         dt = get_datetime(dt, tz_name)  # This will try to standardize the timezone
         return(dt)
     except Exception:
-        traceback.print_exc()
         parent.setEvalErrorString("Error: Was not able to get the local time")
         return
 
 @qgsfunction(args='auto', group=group_name)
 def esm_local_qdatetime(feature, parent):
     """
-    Return a standard QGIS QDateTime object.
+    Returns the current date and time as a standard QGIS QDateTime object with the local computer's timezone settings.
 
     <h4>Syntax</h4>
     <p><b>esm_local_qdatetime</b>( )</p>
@@ -363,13 +357,12 @@ def esm_local_qdatetime(feature, parent):
     <p>None</p>
     <h4>Example usage</h4>
     <ul>
-      <li><b>esm_local_datetime</b>() &rarr; returns local python datetime with timezone set</li>
+      <li><b>esm_local_qdatetime</b>() &rarr; returns local QGIS supported QDateTime object.</li>
     </ul>
     """
     try:
         dt = QDateTime.currentDateTime()
         return(dt)
     except Exception:
-        traceback.print_exc()
         parent.setEvalErrorString("Error: Was not able to get the local time")
         return
