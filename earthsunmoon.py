@@ -28,6 +28,7 @@ try:
     from timezonefinder import TimezoneFinder
     from skyfield.api import wgs84
     from jplephem.spk import SPK
+    from .functions import InitFunctions, UnloadFunctions
     libraries_found = True
 except Exception:
     # traceback.print_exc()
@@ -125,6 +126,9 @@ class EarthSunMoon(object):
         # Add the processing provider
         QgsApplication.processingRegistry().addProvider(self.provider)
 
+        if libraries_found:
+            InitFunctions()
+
     def unload(self):
         """Remove the plugin menu item and icon from QGIS GUI."""
         
@@ -150,6 +154,8 @@ class EarthSunMoon(object):
         self.iface.removePluginMenu('Earth, sun, moon && planets', self.helpAction)
         del self.toolbar
         QgsApplication.processingRegistry().removeProvider(self.provider)
+        if libraries_found:
+            UnloadFunctions()
 
     def requirements(self):
         message = '''
