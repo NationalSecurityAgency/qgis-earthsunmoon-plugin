@@ -1,4 +1,6 @@
-win_tz_map = {'AUS Central Standard Time': 'Australia/Darwin',
+# Added in 'Coordinated Universal Time': 'UTC'
+win_tz_map = {
+ 'AUS Central Standard Time': 'Australia/Darwin',
  'AUS Eastern Standard Time': 'Australia/Sydney',
  'Afghanistan Standard Time': 'Asia/Kabul',
  'Alaskan Standard Time': 'America/Anchorage',
@@ -31,6 +33,7 @@ win_tz_map = {'AUS Central Standard Time': 'Australia/Darwin',
  'Central Standard Time (Mexico)': 'America/Mexico_City',
  'Chatham Islands Standard Time': 'Pacific/Chatham',
  'China Standard Time': 'Asia/Shanghai',
+ 'Coordinated Universal Time': 'UTC',
  'Cuba Standard Time': 'America/Havana',
  'Dateline Standard Time': 'Etc/GMT+12',
  'E. Africa Standard Time': 'Africa/Nairobi',
@@ -102,6 +105,7 @@ win_tz_map = {'AUS Central Standard Time': 'Australia/Darwin',
  'Saratov Standard Time': 'Europe/Saratov',
  'Singapore Standard Time': 'Asia/Singapore',
  'South Africa Standard Time': 'Africa/Johannesburg',
+ 'South Sudan Standard Time': 'Africa/Juba',
  'Sri Lanka Standard Time': 'Asia/Colombo',
  'Sudan Standard Time': 'Africa/Khartoum',
  'Syria Standard Time': 'Asia/Damascus',
@@ -134,5 +138,7 @@ win_tz_map = {'AUS Central Standard Time': 'Australia/Darwin',
  'West Asia Standard Time': 'Asia/Tashkent',
  'West Bank Standard Time': 'Asia/Hebron',
  'West Pacific Standard Time': 'Pacific/Port_Moresby',
- 'Yakutsk Standard Time': 'Asia/Yakutsk'}
+ 'Yakutsk Standard Time': 'Asia/Yakutsk',
+ 'Yukon Standard Time': 'America/Whitehorse'
+}
 
