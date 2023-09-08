@@ -2,15 +2,14 @@ import os
 from datetime import datetime, timedelta
 from dateutil.tz import tzlocal
 from dateutil.relativedelta import relativedelta
-from pytz import timezone, all_timezones
-import pytz
+from zoneinfo import ZoneInfo, available_timezones
 from skyfield.api import load, load_file, wgs84
 from skyfield import almanac
 from timezonefinder import TimezoneFinder
 
 from qgis.PyQt.QtGui import QIcon, QFont, QColor
 from qgis.PyQt.QtWidgets import QDockWidget, QApplication
-from qgis.PyQt.QtCore import pyqtSlot, Qt, QTime, QDate, QDateTime
+from qgis.PyQt.QtCore import pyqtSlot, Qt, QTime, QDate
 from qgis.PyQt.uic import loadUiType
 from qgis.core import Qgis, QgsPointXY, QgsLineString, QgsMultiPolygon, QgsPolygon, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.gui import QgsRubberBand
@@ -51,11 +50,11 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         self.currentDateTimeButton.setIcon(QIcon(os.path.dirname(__file__) + "/icons/CurrentTime.png"))
         self.coordLineEdit.returnPressed.connect(self.coordCommitButton)
 
-        self.dt_utc = datetime.now(pytz.utc)
+        self.dt_utc = datetime.now(ZoneInfo("UTC"))
         self.initialTimeZone()
 
     def showEvent(self, e):
-        self.dt_utc = datetime.now(pytz.utc)
+        self.dt_utc = datetime.now(ZoneInfo("UTC"))
         self.updateGuiDateTime()
 
     def closeEvent(self, e):
@@ -67,7 +66,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
     def initialTimeZone(self):
         """
         This is to get a standardized UTC time and time zone from the system time
-        that conforms to the known timezones used by pytz. At bare minimum the
+        that conforms to the known timezones used by zoneinfo. At bare minimum the
         system time zone offset is used. Timezones are a pain.
         """
         tz = tzlocal()
@@ -78,11 +77,11 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
             name = dt.tzname()
         if name in win_tz_map:
             name = win_tz_map[name]
-        if name not in all_timezones:
+        if name not in available_timezones():
             offset = int(dt.tzinfo.utcoffset(dt).total_seconds()/3600.0)
             name = 'Etc/GMT{:+d}'.format(-offset)
         self.cur_tzname = name
-        self.tz = timezone(name)
+        self.tz = ZoneInfo(name)
 
     def getLocalDateTime(self):
         dt = self.dt_utc.astimezone(self.tz)
@@ -113,15 +112,13 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
                 coord = '{:.8f}, {:.8f}'.format(self.cur_location.y(), self.cur_location.x())
                 self.coordLineEdit.setText(coord)
                 loc = wgs84.latlon(self.cur_location.y(), self.cur_location.x())
-                ts = load.timescale()
+                ts = settings.timescale()
                 dt = self.getLocalDateTime()
                 year = dt.year
-                dt = dt.replace(tzinfo=None)
-                ldt = self.tz.localize(dt)
-                cur_time = ts.from_datetime(ldt)
+                cur_time = ts.from_datetime(dt)
                 
                 # Load  ephemeris
-                eph = load_file(settings.ephemPath())
+                eph = settings.ephem()
                 earth = eph['earth']
                 sun = eph['sun']
                 moon = eph['moon']
@@ -140,7 +137,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
                 self.moonElevationLabel.setText('{:.6f}'.format(alt.degrees))
                 
                 # Get solar noon
-                midnight = ldt.replace(hour=0, minute=0, second=0, microsecond=0)
+                midnight = dt.replace(hour=0, minute=0, second=0, microsecond=0)
                 next_midnight = midnight + timedelta(days=1)
                 t0 = ts.from_datetime(midnight) # Starting time to search for events
                 t1 = ts.from_datetime(next_midnight) # Ending time to search for events
@@ -241,7 +238,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
             return( tz_dt.strftime(fmt) )
 
     def on_currentDateTimeButton_pressed(self):
-        self.dt_utc = datetime.now(pytz.utc)
+        self.dt_utc = datetime.now(ZoneInfo("UTC"))
         self.updateSunInfo()
 
     def startCapture(self):
@@ -267,7 +264,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         if self.isVisible() and self.coordCaptureButton.isChecked():
             self.cur_location = pt
             self.cur_tzname = self.tzf.timezone_at(lng=lon, lat=lat)
-            self.tz = timezone(self.cur_tzname)
+            self.tz = ZoneInfo(self.cur_tzname)
             self.updateSunInfo()
         else:
             self.cur_location = None
@@ -287,7 +284,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         else:
             dt = self.getLocalDateTime()
             dt = dt.replace(year=date.year(), month=date.month(), day=date.day())
-            self.dt_utc = dt.astimezone(pytz.utc)
+            self.dt_utc = dt.astimezone(ZoneInfo("UTC"))
         self.updateSunInfo()
 
     def on_timeEdit_timeChanged(self, time):
@@ -296,7 +293,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
         else:
             dt = self.getLocalDateTime()
             dt = dt.replace(hour=time.hour(), minute=time.minute(), second=time.second())
-            self.dt_utc = dt.astimezone(pytz.utc)
+            self.dt_utc = dt.astimezone(ZoneInfo("UTC"))
         self.updateSunInfo()
 
     def coordCommitButton(self):
@@ -309,7 +306,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
             (lat, lon) = parseDMSString(coord)
             self.cur_location = QgsPointXY(lon, lat)
             self.cur_tzname = self.tzf.timezone_at(lng=lon, lat=lat)
-            self.tz = timezone(self.cur_tzname)
+            self.tz = ZoneInfo(self.cur_tzname)
             self.updateSunInfo()
         except Exception:
             self.clearInfo()
