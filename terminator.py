@@ -20,9 +20,7 @@
 
 
 from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 
 class Terminator:
@@ -49,12 +47,15 @@ class Terminator:
             
             Methods:
             self.set_date() can be used to change the date, upon which all properties will be recalculated.
-            self.sort() will sort the coordinates in clockwise order as seen from the sun.
             self.calc_polygons() calculates the properties <self.polygons> and <self.edges>. 
                 It is called by default if <calculate_polygons> is True.
+            Terminator.solar_position(date) for the coordinates where the sun is at zenith at a given datetime (staticmethod).
+            
+            Some 'private' methods that you usually won't be calling directly:
             Two techniques for calculating the terminator line are used:
                 self._method_rotation() gives coordinates that are EQUALLY SPACED ON A SPHERE (poor resolution near poles)
                 self._method_longitudes() gives coordinates with EQUALLY SPACED LONGITUDES (poor resolution near equator)
+            self._sort() to sort all the coordinates (from _rotation and _longitudes) in clockwise order as seen from the sun.
             These two techniques are combined to give closely spaced coordinates both near the equator and the poles.
         """
         if date is None:
@@ -69,17 +70,17 @@ class Terminator:
         if hasattr(self, 'date'):
             if date == self.date: return # No effort needed
         self.date = date
-        self.solar_lon, self.solar_lat = self._solar_position(date)
+        self.solar_lon, self.solar_lat = self.solar_position(date)
         # Combine both methods, to get good resolution all around the terminator
         terminator_rotation = self._method_rotation()
         terminator_longitudes = self._method_longitudes()
         longitudes = np.append(terminator_rotation[0], terminator_longitudes[0])
         latitudes = np.append(terminator_rotation[1], terminator_longitudes[1])
         # Order the vertices anticlockwise as seen from the sun, because now they are not in any particular order.
-        self.terminator = self.sort(longitudes, latitudes) # The UNCLOSED terminator line. To calculate closed polygons, use self.calc_polygons().
+        self.terminator = self._sort(longitudes, latitudes) # The UNCLOSED terminator line. To calculate closed polygons, use self.calc_polygons().
         if hasattr(self, 'polygons'): self.calc_polygons() # Only calc_polygons() if it was already done before
 
-    def sort(self, longitudes: np.ndarray, latitudes: np.ndarray):
+    def _sort(self, longitudes: np.ndarray, latitudes: np.ndarray):
         """ Longitudes and latitudes are in DEGREES (both as input arguments and returned values). """
         longitudes, latitudes = np.deg2rad((longitudes + 180) % 360 - 180), np.deg2rad(latitudes)
         solar_lat, solar_lon = np.deg2rad(self.solar_lat), np.deg2rad(self.solar_lon)
@@ -184,14 +185,14 @@ class Terminator:
         return np.rad2deg(longitudes), np.rad2deg(latitudes)
 
     @staticmethod
-    def _solar_position(date: datetime):
-        """ Returns latitude and longitude (in DEGREES) where the sun is directly overhead at <date>.
+    def solar_position(date: datetime):
+        """ Returns tuple (longitude, latitude) in DEGREES where the sun is directly overhead at <date>.
             Source: Vallado, David 'Fundamentals of Astrodynamics and Applications', (2007), Chapter 5 (Algorithm 29)
             A more accurate coordinate can be calculated using other libraries, but the error of not accounting for the
             oblateness of the earth is probably the more significant factor in the error on the final terminator polygon.
         """
         # NOTE: Constants are in degrees in the textbook, so we need to convert the values from deg2rad when taking sin/cos
-        T_UT1 = (float(pd.Timestamp(date).to_julian_date()) - 2451545.0)/36525 # Centuries from J2000
+        T_UT1 = (date - datetime(2000, 1, 1, 12, 0))/timedelta(days=1)/36525 # Centuries from J2000
         lambda_M_sun = (280.460 + 36000.771*T_UT1) % 360 # solar longitude (deg)
         M_sun = (357.5277233 + 35999.05034*T_UT1) % 360 # solar anomaly (deg)
         lambda_ecliptic = (lambda_M_sun + 1.914666471*np.sin(np.deg2rad(M_sun)) + 0.019994643*np.sin(np.deg2rad(2*M_sun))) # ecliptic longitude
@@ -201,8 +202,8 @@ class Terminator:
         numerator = (np.cos(np.deg2rad(epsilon))*np.sin(np.deg2rad(lambda_ecliptic))/np.cos(np.deg2rad(delta_sun)))
         denominator = (np.cos(np.deg2rad(lambda_ecliptic))/np.cos(np.deg2rad(delta_sun)))
         alpha_sun = np.rad2deg(np.arctan2(numerator, denominator))
-        # Longitude is opposite of Greenwich Hour Angle (GHA), GHA == theta_GMST - alpha_sun
-        theta_GMST = ((67310.54841 + (876600*3600 + 8640184.812866)*T_UT1 + 0.093104*T_UT1**2 - 6.2e-6*T_UT1**3)  % 86400)/240 # Greenwich mean sidereal time (seconds), converted to degrees
+        # Longitude is opposite of Greenwich Hour Angle (GHA = theta_GMST - alpha_sun)
+        theta_GMST = ((67310.54841 + (876600*3600 + 8640184.812866)*T_UT1 + 0.093104*T_UT1**2 - 6.2e-6*T_UT1**3) % 86400)/240 # Greenwich mean sidereal time (seconds), converted to degrees
         lon = -(theta_GMST - alpha_sun)
         if lon < -180: lon += 360
         return lon, delta_sun
@@ -267,65 +268,3 @@ class Terminator:
         for i, polygon in enumerate(self.polygons):
             self.polygons[i] = tuple(np.append(p, p[0]) for p in polygon)
 
-
-if __name__ == "__main__":
-    animate = False
-    delta = 10 # Terminator resolution in degrees (10° for testing to clearly see any glitches if they occur)
-    date = datetime.utcnow()
-    
-    dusk_dawn = Terminator(date, delta=delta, refraction=-10)
-    sunrise_sunset = Terminator(date, delta=delta, refraction=0)
-    civil_twilight = Terminator(date, delta=delta, refraction=6)
-    nautical_twilight = Terminator(date, delta=delta, refraction=12)
-    astronomical_twilight = Terminator(date, delta=delta, refraction=18)
-    twilights = [dusk_dawn, sunrise_sunset, civil_twilight, nautical_twilight, astronomical_twilight]
-    colors = ['#FFFF55', '#888888', '#666666', '#333333', '#000000']
-    alpha = 1
-
-
-    def show_animation(date):
-        import matplotlib.animation as animation
-        fig, ax = plt.subplots()
-        scat = ax.scatter([], [], color='y') # Show Sun at zenith
-        fills = [ax.fill([], [], [], [], color=colors[i], alpha=alpha, edgecolor=None) for i in range(len(twilights))] # The four twilight types
-        lines = [ax.plot([], [], [], [], color='y') for _ in twilights] # The four twilight lines
-        ax.set_xlim(-180, 180)
-        ax.set_ylim(-90, 90)
-        ax.set_aspect('equal', adjustable='box')
-        fig.tight_layout()
-
-        def update(frame: int):
-            dt = timedelta(days=2, minutes=10, seconds=np.random.random()) # Random amount of seconds to see as many cases as possible
-            datenow = date + frame*dt
-            for twilight in twilights: twilight.set_date(datenow)
-            
-            ax.set_title(str(datenow))
-            scat.set_offsets((sunrise_sunset.solar_lon, sunrise_sunset.solar_lat))
-            # Show various twilight types
-            for i, terminator in enumerate(twilights):
-                for j, polygon in enumerate(terminator.polygons): fills[i][j].set_xy(np.asarray(polygon).T)
-                for j, edge in enumerate(terminator.edges): lines[i][j].set_data(np.asarray(edge))
-                if len(terminator.polygons) == 1: fills[i][1].set_xy([[0, 0]])
-                if len(terminator.edges) == 1: lines[i][1].set_data([[0], [0]])
-        update(0)
-        ani = animation.FuncAnimation(fig=fig, func=update, frames=None, cache_frame_data=False, interval=32)
-        plt.show()
-
-    def show_plot(date):
-        for twilight in twilights: twilight.set_date(date)
-        
-        fig, ax = plt.subplots()
-        ax.set_title(str(date))
-        ax.scatter(sunrise_sunset.solar_lon, sunrise_sunset.solar_lat, color='y')
-        # Show various twilight types
-        for i, terminator in enumerate(twilights):
-            for polygon in terminator.polygons: ax.fill(*polygon, color=colors[i], alpha=alpha, edgecolor=None)
-            for edge in terminator.edges: ax.plot(*edge, color='y')
-        ax.set_xlim(-180, 180)
-        ax.set_ylim(-90, 90)
-        ax.set_aspect('equal', adjustable='box')
-        fig.tight_layout()
-        plt.show()
-
-    if animate: show_animation(date)
-    else: show_plot(date)

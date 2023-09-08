@@ -174,7 +174,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
             (sink_sun, dest_id_sun) = self.parameterAsSink(
                 parameters, self.PrmSunOutput, context, f,
                 QgsWkbTypes.Point, epsg4326)
-            lon, lat = Terminator._solar_position(utc)
+            lon, lat = Terminator.solar_position(utc)
             pt = QgsPointXY(float(lon), float(lat))
             attr = ['Sun', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
             feat = QgsFeature()
