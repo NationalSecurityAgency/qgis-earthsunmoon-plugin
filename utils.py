@@ -7,6 +7,8 @@ from datetime import date
 from shutil import copyfile
 try:
     from jplephem.spk import SPK
+    from skyfield.api import load, load_file, wgs84
+    from skyfield import almanac
 except Exception:
     pass
 
@@ -39,6 +41,8 @@ class Settings():
         # Initialize the ephemeris file to the default, but it will be overwritten in readSettings()
         self.ephem_file = DEFAULT_EPHEM
         self.readSettings()
+        self.eph = None  # Skyfield ephemeris
+        self.ts = None  # Skyfield timescale
 
     def ephemDir(self):
         """Return the directory where the ephemeris files are stored"""
@@ -62,6 +66,16 @@ class Settings():
         path = os.path.abspath(os.path.join(self.ephem_dir_path, self.ephem_file))
         return(path)
 
+    def ephem(self):
+        if not self.eph:
+            self.eph = load_file(self.ephemPath())
+        return(self.eph)
+
+    def timescale(self):
+        if not self.ts:
+            self.ts = load.timescale()
+        return(self.ts)
+
     def allEphemFiles(self):
         files = []
         for file in os.listdir(self.ephemDir()):
@@ -84,6 +98,7 @@ class Settings():
         return(msg)
 
     def setEphemFile(self, file):
+        self.eph = None
         self.ephem_file = file
         path = self.ephemPath()
         if not os.path.isfile(path):
