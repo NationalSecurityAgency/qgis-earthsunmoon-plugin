@@ -70,7 +70,7 @@ def utc_datetime(dt):
 @qgsfunction(-1, group=group_name)
 def esm_moon_phase(values, feature, parent):
     """
-    Given a date and time return the moon's phase in degrees where 0° is the New Noon, 90° is First Quarter, 180° is Full Moon, and 270° is Last Quarter.
+    Given a date and time, return the moon's phase in degrees where 0° is the New Noon, 90° is First Quarter, 180° is Full Moon, and 270° is Last Quarter.
 
     <h4>Syntax</h4>
     <p><b>esm_moon_phase</b>( <i>datetime</i>[, tz_name] )</p>
@@ -110,7 +110,7 @@ def esm_moon_phase(values, feature, parent):
 @qgsfunction(-1, group=group_name)
 def esm_sun_zenith(values, feature, parent):
     """
-    Given a date and time return the EPSG:4326 coordinate point where the sun is directly overhead.
+    Given a date and time, return the EPSG:4326 coordinate point where the sun is directly overhead.
 
     <h4>Syntax</h4>
     <p><b>esm_sun_zenith</b>( <i>datetime</i>[, tz_name] )</p>
@@ -156,7 +156,7 @@ def esm_sun_zenith(values, feature, parent):
 @qgsfunction(-1, group=group_name)
 def esm_moon_zenith(values, feature, parent):
     """
-    Given a date and time return the EPSG:4326 coordinate point where the moon is directly overhead.
+    Given a date and time, return the EPSG:4326 coordinate point where the moon is directly overhead.
 
     <h4>Syntax</h4>
     <p><b>esm_moon_zenith</b>( <i>datetime</i>[, tz_name] )</p>

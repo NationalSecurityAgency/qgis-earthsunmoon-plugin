@@ -1,6 +1,6 @@
 # Earth, Sun, Moon, and Planets Plugin
 
-This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The ***Day/Night terminator*** algorithm plots the day/night terminator line and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight, and astronomical twilight. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
+This plugin uses the highly accurate Skyfield library to show where the sun, moon, and planets are located at their zenith from earth's perspective for a particular date and time. An additional algorithm calculates lunar and solar data for a particular location on earth given a date and time. The ***Day/Night terminator*** algorithm plots the day/night terminator line and polygon layers associated with sunrise/sunset, civil twilight, nautical twilight, and astronomical twilight. It includes Field Calculator expressions which give access to solar and lunar information. When installed, this plugin can be found in the QGIS menu under ***Plugins->Earth, sun, moon &amp; planets***. 
 
 <div style="text-align:center"><img src="doc/menu.jpg" alt="Plugin menu"></div>
 
@@ -10,6 +10,17 @@ This plugin can be enhanced with two additional python libraries not provided by
 You do not need to be a system administrator to be able to install these libraries. If these libraries are not installed then the functionality will be limited to the following two capabilities.
 
 <div style="text-align:center"><img src="doc/menu_limited.jpg" alt="Plugin menu"></div>
+
+## Field Calculator Expressions
+
+The following expressions are available in the field calculator. Note that the expressions require the Skyfield library.
+
+* ***esm_local_datetime()*** - Returns the current date and time as a python datetime object with the local computer's timezone settings.
+* ***esm_local_qdatetime()*** - Returns the current date and time as a standard QGIS QDateTime object with the local computer's timezone settings. 
+* ***esm_moon_phase()*** - Given a date and time, return the moon's phase in degrees where 0° is the New Noon, 90° is First Quarter, 180° is Full Moon, and 270° is Last Quarter.
+* ***esm_moon_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the moon is directly overhead. 
+* ***esm_sun_moon_info()*** - Given a date and time, latitude and longitude in EPSG:4326, output format type, and optional timezone of the date and time object, it returns a python dictionary or JSON string of solar and lunar information.
+* ***esm_sun_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the sun is directly overhead.
 
 ## Tools Overview
 
