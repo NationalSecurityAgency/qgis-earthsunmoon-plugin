@@ -1,7 +1,10 @@
 import os
-from datetime import datetime
+import math
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from skyfield.api import Loader, load, wgs84
 from skyfield.positionlib import Geocentric
+import traceback
 
 from qgis.core import (
     QgsPointXY, QgsFeature, QgsGeometry, QgsField, QgsFields, QgsVectorLayer,
@@ -11,14 +14,16 @@ from qgis.core import (
     QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingException,
+    QgsProcessingParameterDefinition,
+    QgsProcessingParameterString,
     QgsProcessingLayerPostProcessorInterface,
     QgsProcessingParameterBoolean,
     QgsProcessingParameterDateTime,
     QgsProcessingParameterFeatureSink)
 
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, settings
+from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime, QTime
+from .utils import epsg4326, settings, SolarObj
 
 class SunPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -27,6 +32,9 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
 
     PrmOutputLayer = 'OutputLayer'
     PrmDateTime = 'DateTime'
+    PrmTimeSeries = 'TimeSeries'
+    PrmTimeIncrement = 'TimeIncrement'
+    PrmTimeDuration = 'TimeDuration'
     PrmStyle = 'Style'
 
     def initAlgorithm(self, config):
@@ -48,6 +56,28 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
                 True,
                 optional=False)
         )
+        param = QgsProcessingParameterBoolean(
+                self.PrmTimeSeries,
+                'Create sun time series',
+                False,
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+
+        param = QgsProcessingParameterString(
+                self.PrmTimeIncrement,
+                'Time increment between observations (hh:mm:ss)',
+                defaultValue='00:05:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+        param = QgsProcessingParameterString(
+                self.PrmTimeDuration,
+                'Total duration for sun positions (hh:mm:ss)',
+                defaultValue='24:00:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputLayer,
@@ -56,43 +86,85 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
 
     def processAlgorithm(self, parameters, context, feedback):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
-        dt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
-        utc = dt.toUTC()
-        eph = load(settings.ephemPath())
-        earth = eph['earth'] # vector from solar system barycenter to geocenter
-        sun = eph['sun'] # vector from solar system barycenter to sun
-        geocentric_sun = sun - earth # vector from geocenter to sun
-        ts = load.timescale()
-        date = utc.date()
-        time = utc.time()
-        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
-        try:
-            sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
-        except Exception:
-            feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
-            return {}
+        qdt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
+        generate_timeseries = self.parameterAsBool(parameters, self.PrmTimeSeries, context)
+        time_increment = self.parameterAsString(parameters, self.PrmTimeIncrement, context)
+        time_duration = self.parameterAsString(parameters, self.PrmTimeDuration, context)
+        if generate_timeseries:
+            num_events, time_delta = self.parse_times(time_increment, time_duration)
+        else:
+            num_events = 1
+            time_delta = 0
+        if num_events == -1:
+            raise QgsProcessingException('Invalid time increment and/or duration.')
+        feedback.pushInfo('Number of sun observations: {}'.format(num_events))
 
         f = QgsFields()
+        f.append(QgsField("object_id", QVariant.Int))
         f.append(QgsField("name", QVariant.String))
         f.append(QgsField("latitude", QVariant.Double))
         f.append(QgsField("longitude", QVariant.Double))
+        f.append(QgsField("timestamp", QVariant.Double))
         f.append(QgsField("datetime", QVariant.String))
         f.append(QgsField("utc", QVariant.String))
 
         (sink, dest_id) = self.parameterAsSink(
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
+
+        qutc = qdt.toUTC()
+        utc = qutc.toPyDateTime()
+        utc = utc.replace(tzinfo=ZoneInfo('UTC'))  # Make sure it is an aware UTC
+        eph = load(settings.ephemPath())
+        earth = eph['earth'] # vector from solar system barycenter to geocenter
+        sun = eph['sun'] # vector from solar system barycenter to sun
+        geocentric_sun = sun - earth # vector from geocenter to sun
+        ts = load.timescale()
         
-        feat = QgsFeature()
-        attr = ['Sun', float(sun_position.latitude.degrees), float(sun_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
-        feat.setAttributes(attr)
-        pt = QgsPointXY(sun_position.longitude.degrees, sun_position.latitude.degrees)
-        feat.setGeometry(QgsGeometry.fromPointXY(pt))
-        sink.addFeature(feat)
+        for i in range(num_events):
+            delta = i*time_delta
+            utc_cur = utc + timedelta(0, delta)
+            t = ts.from_datetime(utc_cur)
+            try:
+                sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
+            except Exception:
+                feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
+                return {}
+            
+            feat = QgsFeature()
+            attr = [SolarObj.SUN.value, 'Sun', float(sun_position.latitude.degrees), float(sun_position.longitude.degrees), utc_cur.timestamp(), qdt.addSecs(delta).toString('yyyy-MM-dd hh:mm:ss'), qutc.addSecs(delta).toString('yyyy-MM-dd hh:mm:ss')]
+            feat.setAttributes(attr)
+            pt = QgsPointXY(sun_position.longitude.degrees, sun_position.latitude.degrees)
+            feat.setGeometry(QgsGeometry.fromPointXY(pt))
+            sink.addFeature(feat)
+
         if auto_style and context.willLoadLayerOnCompletion(dest_id):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
         return {self.PrmOutputLayer: dest_id}
+
+    def parse_times(self, increment, duration):
+        inc = increment.split(':')
+        inc_len = len(inc)
+        dur = duration.split(':')
+        dur_len = len(dur)
+
+        try:
+            inc_seconds = float(inc[0]) * 3600.0
+            if inc_len >= 2:
+                inc_seconds += float(inc[1]) * 60.0
+            if inc_len >= 3:
+                inc_seconds += float(inc[2])
+            dur_seconds = float(dur[0]) * 3600.0
+            if dur_len >= 2:
+                dur_seconds += float(dur[1]) * 60.0
+            if dur_len >= 3:
+                dur_seconds += float(dur[2])
+            total_instances = math.floor(dur_seconds / inc_seconds)
+            return( total_instances, inc_seconds)
+        except Exception:
+            print(traceback.format_exc())
+            return(-1, -1)
 
     def name(self):
         return 'sunposition'
