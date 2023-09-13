@@ -1,6 +1,5 @@
 import os
-import math
-from datetime import datetime, timedelta
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 from skyfield.api import Loader, load, wgs84
 from skyfield.positionlib import Geocentric
@@ -23,7 +22,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime, QTime
-from .utils import epsg4326, settings, SolarObj
+from .utils import epsg4326, settings, SolarObj, parse_timeseries
 
 class SunPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -67,7 +66,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         param = QgsProcessingParameterString(
                 self.PrmTimeIncrement,
                 'Time increment between observations (hh:mm:ss)',
-                defaultValue='00:05:00',
+                defaultValue='01:00:00',
                 optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
@@ -91,7 +90,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         time_increment = self.parameterAsString(parameters, self.PrmTimeIncrement, context)
         time_duration = self.parameterAsString(parameters, self.PrmTimeDuration, context)
         if generate_timeseries:
-            num_events, time_delta = self.parse_times(time_increment, time_duration)
+            num_events, time_delta = parse_timeseries(time_increment, time_duration)
         else:
             num_events = 1
             time_delta = 0
@@ -120,7 +119,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         sun = eph['sun'] # vector from solar system barycenter to sun
         geocentric_sun = sun - earth # vector from geocenter to sun
         ts = load.timescale()
-        
+
         for i in range(num_events):
             delta = i*time_delta
             utc_cur = utc + timedelta(0, delta)
@@ -142,29 +141,6 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
         return {self.PrmOutputLayer: dest_id}
-
-    def parse_times(self, increment, duration):
-        inc = increment.split(':')
-        inc_len = len(inc)
-        dur = duration.split(':')
-        dur_len = len(dur)
-
-        try:
-            inc_seconds = float(inc[0]) * 3600.0
-            if inc_len >= 2:
-                inc_seconds += float(inc[1]) * 60.0
-            if inc_len >= 3:
-                inc_seconds += float(inc[2])
-            dur_seconds = float(dur[0]) * 3600.0
-            if dur_len >= 2:
-                dur_seconds += float(dur[1]) * 60.0
-            if dur_len >= 3:
-                dur_seconds += float(dur[2])
-            total_instances = math.floor(dur_seconds / inc_seconds)
-            return( total_instances, inc_seconds)
-        except Exception:
-            print(traceback.format_exc())
-            return(-1, -1)
 
     def name(self):
         return 'sunposition'
