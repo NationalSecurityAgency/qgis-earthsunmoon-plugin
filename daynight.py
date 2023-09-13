@@ -17,7 +17,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon, QColor
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime, Qt
-from .utils import epsg4326
+from .utils import epsg4326, SolarObj
 
 class DayNightAlgorithm(QgsProcessingAlgorithm):
     """
@@ -33,7 +33,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
     PrmCivilTwilight = 'CivilTwilight'
     PrmNauticalTwilight = 'NauticalTwilight'
     PrmAstronomicalTwilight = 'AstronomicalTwilight'
-    PrmSunriseSunset = 'SunriseSunset'
+    PrmNight = 'Night'
     PrmDelta = 'Delta'
     PrmClipToCRS = 'ClipToCRS'
     PrmDayNightLine = 'DayNightLine'
@@ -54,21 +54,14 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterBoolean(
                 self.PrmShowSun,
-                'Show sun position',
+                'Sun position',
                 True,
                 optional=True)
         )
         self.addParameter(
             QgsProcessingParameterBoolean(
                 self.PrmDayNightLine,
-                'Show day/night terminator line',
-                True,
-                optional=True)
-        )
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.PrmSunriseSunset,
-                'Sunrise, Sunset',
+                'Day, night terminator line',
                 True,
                 optional=True)
         )
@@ -90,6 +83,13 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterBoolean(
                 self.PrmAstronomicalTwilight,
                 'Astronomical Twilight',
+                True,
+                optional=True)
+        )
+        self.addParameter(
+            QgsProcessingParameterBoolean(
+                self.PrmNight,
+                'Night',
                 True,
                 optional=True)
         )
@@ -127,17 +127,17 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmSunOutput,
-                'Sun location')
+                'Sun position')
         )
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputLine,
-                'Day/Night terminator line')
+                'Day, night terminator line')
         )
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputPolygons,
-                'Day/Night terminator polygons')
+                'Twilight and night polygons')
         )
 
     def processAlgorithm(self, parameters, context, feedback):
@@ -146,17 +146,19 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
         clip_to_crs = self.parameterAsBool(parameters, self.PrmClipToCRS, context)
         show_sun = self.parameterAsBool(parameters, self.PrmShowSun, context)
         day_night_line = self.parameterAsBool(parameters, self.PrmDayNightLine, context)
-        sunrise_sunset = self.parameterAsBool(parameters, self.PrmSunriseSunset, context)
         civil_twilight = self.parameterAsBool(parameters, self.PrmCivilTwilight, context)
         nautical_twilight = self.parameterAsBool(parameters, self.PrmNauticalTwilight, context)
         astronomical_twilight = self.parameterAsBool(parameters, self.PrmAstronomicalTwilight, context)
+        night = self.parameterAsBool(parameters, self.PrmNight, context)
         delta = self.parameterAsDouble(parameters, self.PrmDelta, context)
         qdt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
         qutc = qdt.toUTC()
         dt = qdt.toPyDateTime()
         utc = qutc.toPyDateTime()
         f = QgsFields()
-        f.append(QgsField("feature", QVariant.String))
+        f.append(QgsField("object_id", QVariant.Int))
+        f.append(QgsField("name", QVariant.String))
+        f.append(QgsField("timestamp", QVariant.Double))
         f.append(QgsField("datetime", QVariant.String))
         f.append(QgsField("utc", QVariant.String))
         project_crs = QgsProject.instance().crs()
@@ -165,18 +167,17 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
         else:
             project_bounds = None
         
-        if sunrise_sunset or civil_twilight or nautical_twilight or astronomical_twilight:
+        if civil_twilight or nautical_twilight or astronomical_twilight or night:
             has_polygons = True
         else:
             has_polygons = False
-
         if show_sun:
             (sink_sun, dest_id_sun) = self.parameterAsSink(
                 parameters, self.PrmSunOutput, context, f,
                 QgsWkbTypes.Point, epsg4326)
             lon, lat = Terminator.solar_position(utc)
             pt = QgsPointXY(float(lon), float(lat))
-            attr = ['Sun', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+            attr = [SolarObj.SUN.value, 'Sun', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
             feat = QgsFeature()
             feat.setAttributes(attr)
             feat.setGeometry(QgsGeometry.fromPointXY(pt))
@@ -192,7 +193,7 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
                 parameters, self.PrmOutputLine, context, f,
                 QgsWkbTypes.LineString, epsg4326)
             geom = self.dayNightLineGeom(utc, delta, project_bounds, sun_width)
-            attr = ['Day/Night Line', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+            attr = [SolarObj.DAY_NIGHT.value, 'Day, Night', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
             feat = QgsFeature()
             feat.setAttributes(attr)
             feat.setGeometry(geom)
@@ -204,41 +205,41 @@ class DayNightAlgorithm(QgsProcessingAlgorithm):
                 parameters, self.PrmOutputPolygons, context, f,
                 QgsWkbTypes.MultiPolygon, epsg4326)
 
-        if sunrise_sunset:
+        if civil_twilight:
             t = Terminator(utc, delta=delta, refraction=sun_width)
             geom = self.arrayToGeom(t.polygons, project_bounds)
             if geom:
-                attr = ['Day/Night', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
-                feat = QgsFeature()
-                feat.setAttributes(attr)
-                feat.setGeometry(geom)
-                sink.addFeature(feat)
-
-        if civil_twilight:
-            t = Terminator(utc, delta=delta, refraction=6)
-            geom = self.arrayToGeom(t.polygons, project_bounds)
-            if geom:
-                attr = ['Civil Twilight', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+                attr = [SolarObj.CIVIL_TWILIGHT.value, 'Civil Twilight', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
                 feat = QgsFeature()
                 feat.setAttributes(attr)
                 feat.setGeometry(geom)
                 sink.addFeature(feat)
 
         if nautical_twilight:
-            t = Terminator(utc, delta=delta, refraction=12)
+            t = Terminator(utc, delta=delta, refraction=6)
             geom = self.arrayToGeom(t.polygons, project_bounds)
             if geom:
-                attr = ['Nautical Twilight', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+                attr = [SolarObj.NAUTICAL_TWILIGHT.value, 'Nautical Twilight', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
                 feat = QgsFeature()
                 feat.setAttributes(attr)
                 feat.setGeometry(geom)
                 sink.addFeature(feat)
 
         if astronomical_twilight:
+            t = Terminator(utc, delta=delta, refraction=12)
+            geom = self.arrayToGeom(t.polygons, project_bounds)
+            if geom:
+                attr = [SolarObj.ASTRONOMICAL_TWILIGHT.value, 'Astronomical Twilight', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+                feat = QgsFeature()
+                feat.setAttributes(attr)
+                feat.setGeometry(geom)
+                sink.addFeature(feat)
+
+        if night:
             t = Terminator(utc, delta=delta, refraction=18)
             geom = self.arrayToGeom(t.polygons, project_bounds)
             if geom:
-                attr = ['Astronomical Twilight', qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
+                attr = [SolarObj.NIGHT.value, 'Night', utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-ddThh:mm:ssZ')]
                 feat = QgsFeature()
                 feat.setAttributes(attr)
                 feat.setGeometry(geom)
