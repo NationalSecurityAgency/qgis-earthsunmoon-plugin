@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 from skyfield.api import load, wgs84
 
@@ -9,13 +10,15 @@ from qgis.core import (
 from qgis.core import (
     QgsProcessingAlgorithm,
     QgsProcessingParameterBoolean,
+    QgsProcessingParameterDefinition,
+    QgsProcessingParameterString,
     QgsProcessingLayerPostProcessorInterface,
     QgsProcessingParameterDateTime,
     QgsProcessingParameterFeatureSink)
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, settings, SolarObj
+from .utils import epsg4326, settings, SolarObj, parse_timeseries
 
 class MoonPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -24,6 +27,9 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
 
     PrmOutputLayer = 'OutputLayer'
     PrmDateTime = 'DateTime'
+    PrmTimeSeries = 'TimeSeries'
+    PrmTimeIncrement = 'TimeIncrement'
+    PrmTimeDuration = 'TimeDuration'
     PrmStyle = 'Style'
 
     def initAlgorithm(self, config):
@@ -45,6 +51,28 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
                 True,
                 optional=False)
         )
+        param = QgsProcessingParameterBoolean(
+                self.PrmTimeSeries,
+                'Create moon time series',
+                False,
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+
+        param = QgsProcessingParameterString(
+                self.PrmTimeIncrement,
+                'Time increment between observations (hh:mm:ss)',
+                defaultValue='01:00:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+        param = QgsProcessingParameterString(
+                self.PrmTimeDuration,
+                'Total duration for moon positions (hh:mm:ss)',
+                defaultValue='24:00:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputLayer,
@@ -53,22 +81,19 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
 
     def processAlgorithm(self, parameters, context, feedback):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
-        dt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
-        qutc = dt.toUTC()
-        utc = qutc.toPyDateTime()
-        utc = utc.replace(tzinfo=ZoneInfo('UTC'))  # Make sure it is an aware UTC
-        eph = load(settings.ephemPath())
-        earth = eph['earth'] # vector from solar system barycenter to geocenter
-        moon = eph['moon'] # vector from solar system barycenter to moon
-        geocentric_moon = moon - earth # vector from geocenter to moon
-        ts = load.timescale()
-        t = ts.from_datetime(utc)
-        try:
-            moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
-        except Exception:
-            feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
-            return {}
-            
+        qdt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
+        generate_timeseries = self.parameterAsBool(parameters, self.PrmTimeSeries, context)
+        time_increment = self.parameterAsString(parameters, self.PrmTimeIncrement, context)
+        time_duration = self.parameterAsString(parameters, self.PrmTimeDuration, context)
+        if generate_timeseries:
+            num_events, time_delta = parse_timeseries(time_increment, time_duration)
+        else:
+            num_events = 1
+            time_delta = 0
+        if num_events == -1:
+            raise QgsProcessingException('Invalid time increment and/or duration.')
+        feedback.pushInfo('Number of moon observations: {}'.format(num_events))
+
         f = QgsFields()
         f.append(QgsField("object_id", QVariant.Int))
         f.append(QgsField("name", QVariant.String))
@@ -81,13 +106,32 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
-        
-        feat = QgsFeature()
-        attr = [SolarObj.MOON.value, 'Moon',float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), utc.timestamp(), dt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
-        feat.setAttributes(attr)
-        pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
-        feat.setGeometry(QgsGeometry.fromPointXY(pt))
-        sink.addFeature(feat)
+
+        qutc = qdt.toUTC()
+        utc = qutc.toPyDateTime()
+        utc = utc.replace(tzinfo=ZoneInfo('UTC'))  # Make sure it is an aware UTC
+        eph = load(settings.ephemPath())
+        earth = eph['earth'] # vector from solar system barycenter to geocenter
+        moon = eph['moon'] # vector from solar system barycenter to moon
+        geocentric_moon = moon - earth # vector from geocenter to moon
+        ts = load.timescale()
+
+        for i in range(num_events):
+            delta = i*time_delta
+            utc_cur = utc + timedelta(0, delta)
+            t = ts.from_datetime(utc_cur)
+            try:
+                moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
+            except Exception:
+                feedback.reportError('The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.')
+                return {}
+
+            feat = QgsFeature()
+            attr = [SolarObj.MOON.value, 'Moon', float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), utc_cur.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
+            feat.setAttributes(attr)
+            pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
+            feat.setGeometry(QgsGeometry.fromPointXY(pt))
+            sink.addFeature(feat)
         if auto_style and context.willLoadLayerOnCompletion(dest_id):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
