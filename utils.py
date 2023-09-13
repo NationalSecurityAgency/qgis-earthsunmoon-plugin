@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsSettings, QgsApplication
@@ -12,6 +13,24 @@ try:
 except Exception:
     pass
 
+class SolarObj(Enum):
+    SUN = 0
+    EARTH = 1
+    MOON = 2
+    MERCURY = 3
+    VENUS = 4
+    MARS = 5
+    JUPITER = 6
+    SATURN = 7
+    URANUS = 8
+    NEPTUNE = 9
+    PLUTO = 10
+    DAY_NIGHT = 11
+    CIVIL_TWILIGHT = 12
+    NAUTICAL_TWILIGHT = 13
+    ASTRONOMICAL_TWILIGHT = 14
+    NIGHT = 15
+    
 epsg4326 = QgsCoordinateReferenceSystem('EPSG:4326')
 
 DEFAULT_EPHEM = 'de440s_1990_2040.bsp'

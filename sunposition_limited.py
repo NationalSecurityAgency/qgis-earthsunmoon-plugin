@@ -17,7 +17,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, settings
+from .utils import epsg4326, settings, SolarObj
 
 class SunPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -61,9 +61,11 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         lon, lat = Terminator._solar_position(utc)
 
         f = QgsFields()
+        f.append(QgsField("object_id", QVariant.Int))
         f.append(QgsField("name", QVariant.String))
         f.append(QgsField("latitude", QVariant.Double))
         f.append(QgsField("longitude", QVariant.Double))
+        f.append(QgsField("timestamp", QVariant.Double))
         f.append(QgsField("datetime", QVariant.String))
         f.append(QgsField("utc", QVariant.String))
 
@@ -72,7 +74,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
             QgsWkbTypes.Point, epsg4326)
         
         feat = QgsFeature()
-        attr = ['Sun', float(lat), float(lon), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
+        attr = [SolarObj.SUN.value, 'Sun', float(lat), float(lon), utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
         feat.setAttributes(attr)
         pt = QgsPointXY(lon, lat)
         feat.setGeometry(QgsGeometry.fromPointXY(pt))

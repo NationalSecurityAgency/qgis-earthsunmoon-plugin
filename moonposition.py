@@ -1,4 +1,5 @@
 import os
+from zoneinfo import ZoneInfo
 from skyfield.api import load, wgs84
 
 from qgis.core import (
@@ -14,7 +15,7 @@ from qgis.core import (
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, settings
+from .utils import epsg4326, settings, SolarObj
 
 class MoonPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -53,15 +54,15 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
     def processAlgorithm(self, parameters, context, feedback):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
         dt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
-        utc = dt.toUTC()
+        qutc = dt.toUTC()
+        utc = qutc.toPyDateTime()
+        utc = utc.replace(tzinfo=ZoneInfo('UTC'))  # Make sure it is an aware UTC
         eph = load(settings.ephemPath())
         earth = eph['earth'] # vector from solar system barycenter to geocenter
         moon = eph['moon'] # vector from solar system barycenter to moon
         geocentric_moon = moon - earth # vector from geocenter to moon
         ts = load.timescale()
-        date = utc.date()
-        time = utc.time()
-        t = ts.utc(date.year(), date.month(), date.day(), time.hour(), time.minute(), time.second())
+        t = ts.from_datetime(utc)
         try:
             moon_position = wgs84.geographic_position_of(geocentric_moon.at(t)) # geographic_position_of method requires a geocentric position
         except Exception:
@@ -69,9 +70,11 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
             return {}
             
         f = QgsFields()
+        f.append(QgsField("object_id", QVariant.Int))
         f.append(QgsField("name", QVariant.String))
         f.append(QgsField("latitude", QVariant.Double))
         f.append(QgsField("longitude", QVariant.Double))
+        f.append(QgsField("timestamp", QVariant.Double))
         f.append(QgsField("datetime", QVariant.String))
         f.append(QgsField("utc", QVariant.String))
 
@@ -80,7 +83,7 @@ class MoonPositionAlgorithm(QgsProcessingAlgorithm):
             QgsWkbTypes.Point, epsg4326)
         
         feat = QgsFeature()
-        attr = ['Moon',float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), dt.toString('yyyy-MM-dd hh:mm:ss'), utc.toString('yyyy-MM-dd hh:mm:ss')]
+        attr = [SolarObj.MOON.value, 'Moon',float(moon_position.latitude.degrees), float(moon_position.longitude.degrees), utc.timestamp(), dt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
         feat.setAttributes(attr)
         pt = QgsPointXY(moon_position.longitude.degrees, moon_position.latitude.degrees)
         feat.setGeometry(QgsGeometry.fromPointXY(pt))
