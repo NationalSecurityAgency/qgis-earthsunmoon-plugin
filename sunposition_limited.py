@@ -58,7 +58,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         qdt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
         qutc = qdt.toUTC()
         utc = qutc.toPyDateTime()
-        lon, lat = Terminator._solar_position(utc)
+        lon, lat = Terminator.solar_position(utc)
 
         f = QgsFields()
         f.append(QgsField("object_id", QVariant.Int))
