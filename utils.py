@@ -1,4 +1,5 @@
 import os
+import math
 from enum import Enum
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import Qt
@@ -30,7 +31,29 @@ class SolarObj(Enum):
     NAUTICAL_TWILIGHT = 13
     ASTRONOMICAL_TWILIGHT = 14
     NIGHT = 15
-    
+
+def parse_timeseries(increment, duration):
+    inc = increment.split(':')
+    inc_len = len(inc)
+    dur = duration.split(':')
+    dur_len = len(dur)
+
+    try:
+        inc_seconds = float(inc[0]) * 3600.0
+        if inc_len >= 2:
+            inc_seconds += float(inc[1]) * 60.0
+        if inc_len >= 3:
+            inc_seconds += float(inc[2])
+        dur_seconds = float(dur[0]) * 3600.0
+        if dur_len >= 2:
+            dur_seconds += float(dur[1]) * 60.0
+        if dur_len >= 3:
+            dur_seconds += float(dur[2])
+        total_instances = math.floor(dur_seconds / inc_seconds)
+        return( total_instances, inc_seconds)
+    except Exception:
+        return(-1, -1)
+
 epsg4326 = QgsCoordinateReferenceSystem('EPSG:4326')
 
 DEFAULT_EPHEM = 'de440s_1990_2040.bsp'
