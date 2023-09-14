@@ -11,17 +11,6 @@ You do not need to be a system administrator to be able to install these librari
 
 <div style="text-align:center"><img src="doc/menu_limited.jpg" alt="Plugin menu"></div>
 
-## Field Calculator Expressions
-
-The following expressions are available in the field calculator. Note that the expressions require the Skyfield library.
-
-* ***esm_local_datetime()*** - Returns the current date and time as a python datetime object with the local computer's timezone settings.
-* ***esm_local_qdatetime()*** - Returns the current date and time as a standard QGIS QDateTime object with the local computer's timezone settings. 
-* ***esm_moon_phase()*** - Given a date and time, return the moon's phase in degrees where 0° is the New Noon, 90° is First Quarter, 180° is Full Moon, and 270° is Last Quarter.
-* ***esm_moon_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the moon is directly overhead. 
-* ***esm_sun_moon_info()*** - Given a date and time, latitude and longitude in EPSG:4326, output format type, and optional timezone of the date and time object, it returns a python dictionary or JSON string of solar and lunar information.
-* ***esm_sun_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the sun is directly overhead.
-
 ## Tools Overview
 
 These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
@@ -32,6 +21,17 @@ These are the tools provided by the Earth, Sun, Moon, and Planets Plugin:
 * <img src="icons/venus.png" width=24 height=24 alt="Planetary positions directly overhead"> ***Planetary positions directly overhead*** - This shows the location of the planets where they are directly overhead for a particular date and time.
 * <img src="icons/ephem.svg" alt="Ephemeris information"> ***Ephemeris information*** - This provides information about the selected ephemeris file. This plugin includes limited ephemeris data for the dates 1990-2040. For dates outside this range other ephemeris files can be downloaded from the <a href="https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/">JPL Ephemeris page</a>. These can be installed from the ***Settings*** menu.
 * <img src="doc/settings.png" width=24 height=24 alt="Settings"> ***Settings*** - Plugin settings.
+
+## Field Calculator Expressions
+
+The following expressions are available in the field calculator. Note that the expressions require the Skyfield library.
+
+* ***esm_local_datetime()*** - Returns the current date and time as a python datetime object with the local computer's timezone settings.
+* ***esm_local_qdatetime()*** - Returns the current date and time as a standard QGIS QDateTime object with the local computer's timezone settings. 
+* ***esm_moon_phase()*** - Given a date and time, return the moon's phase in degrees where 0° is the New Noon, 90° is First Quarter, 180° is Full Moon, and 270° is Last Quarter.
+* ***esm_moon_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the moon is directly overhead. 
+* ***esm_sun_moon_info()*** - Given a date and time, latitude and longitude in EPSG:4326, output format type, and optional timezone of the date and time object, it returns a python dictionary or JSON string of solar and lunar information.
+* ***esm_sun_zenith()*** - Given a date and time, return the EPSG:4326 coordinate point where the sun is directly overhead.
 
 ## <img src="icons/daynight.png" width=24 height=24 alt="Day/Night terminator"> Day/Night terminator
 
@@ -61,19 +61,24 @@ The attribute tables give the name of the feature, its computer date and time, a
 
 ## <img src="icons/sun_icon.svg" alt="Sun position directly overhead"> Sun position directly overhead
 
-This is the dialog for the algorithm to calculate the sun directly overhead.
+This shows the dialog for the algorithm to calculate the sun directly overhead. If the Skyfield library is installed then it uses the highly accurate position algorithms of the library; otherwise, it uses a spherical earth model. The time zone of the date and time is based on the time zone of the computer you are running QGIS on. Internally, the dates and times are converted to UTC.
 
 <div style="text-align:center"><img src="doc/sunalg.jpg" alt="Sun position directly overhead"></div>
 
-The moon and planets are the same. This shows what this algorithm produces when this algorithm is run.
+If ***Advanced Paramters*** is expanded and ***Create sun time series*** is checked, then a series of sun observations is created starting from the date and time specified with each successive date and time incremented using ***Time increment between observations*** until the ***Total duration for sun positions*** is reached. Be carefult that the time increment is not to small for the duration desired. There is the potential to create a huge number of sun date &amp; time points. The time increment and total duration is in the form of DD:HH:MM:SS where DD represents days, HH hours, MM minutes, and SS seconds. You don't need to have all the ending times, but you need all the beginning ones. For an example you could do something like **1:26.5** representing 1 day and 26.5 hours which is really 2 days and 2.5 hours. Note that the days, hours, minutes and seconds are not constrained in their size. The time series can be animated with the QGIS time controller or with the QTDC plugin. Here is an example of the resulting image using the default settings.
+
+<div style="text-align:center"><img src="doc/sun_series.jpg" alt="Sun positions overhead"></div>
+
+
+This shows what this algorithm produces when this algorithm is run for both the sun and moon not using a time series.
 
 <div style="text-align:center"><img src="doc/sunmoonmap.jpg" alt="Sun moon map"></div>
 
-This shows the locations of the sun, moon, and planets.
+The planets algorithm currently does not have the option for a time series. This shows the results of running the alogirthms to locate the sun, moon, and planets for a certain date and time.
 
 <div style="text-align:center"><img src="doc/sunmoonplanets.jpg" alt="Sun moon planets"></div>
 
-The attribute table contains the name of the object, its coordinate where it is directly overhead, and the date and time both in computer time and UTC. This is the attribute table with all three combined together.
+The attribute table contains the object id, name of the object, its coordinate where it is directly overhead, and the date and time as a time stamp and computer time and UTC date, time strings. This is the attribute table with all three combined together.
 
 <div style="text-align:center"><img src="doc/attributes.jpg" alt="Attributes"></div>
 
