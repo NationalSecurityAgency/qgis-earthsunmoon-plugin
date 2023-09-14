@@ -33,24 +33,36 @@ class SolarObj(Enum):
     NIGHT = 15
 
 def parse_timeseries(increment, duration):
+    """
+        Parse the time strings of duration and increment formatted as DD:HH:MM:SS when
+        DD are days, HH house, MM minutes, and SS seconds. The numbers are not constrained
+        two digits. The returned results are the number of observation instances and the
+        incremeantal time in seconds.
+    """
     inc = increment.split(':')
     inc_len = len(inc)
     dur = duration.split(':')
     dur_len = len(dur)
 
     try:
-        inc_seconds = float(inc[0]) * 3600.0
+        inc_seconds = float(inc[0]) * 86400.0  # Days: 60 * 60 * 24
         if inc_len >= 2:
-            inc_seconds += float(inc[1]) * 60.0
+            inc_seconds += float(inc[1]) * 3600.0  # Hours
         if inc_len >= 3:
-            inc_seconds += float(inc[2])
-        dur_seconds = float(dur[0]) * 3600.0
+            inc_seconds += float(inc[2]) * 60.0  # Minutes
+        if inc_len >= 4:
+            inc_seconds += float(inc[3])  # Seconds
+
+        dur_seconds = float(dur[0]) * 86400.0
         if dur_len >= 2:
-            dur_seconds += float(dur[1]) * 60.0
+            dur_seconds += float(dur[1]) * 3600.0
         if dur_len >= 3:
+            dur_seconds += float(dur[2]) * 60.0
+        if dur_len >= 4:
             dur_seconds += float(dur[2])
+
         total_instances = math.floor(dur_seconds / inc_seconds)
-        return( total_instances, inc_seconds)
+        return( total_instances, inc_seconds )
     except Exception:
         return(-1, -1)
 

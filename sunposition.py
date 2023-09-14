@@ -65,15 +65,15 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
 
         param = QgsProcessingParameterString(
                 self.PrmTimeIncrement,
-                'Time increment between observations (hh:mm:ss)',
-                defaultValue='01:00:00',
+                'Time increment between observations (DD:HH:MM:SS)',
+                defaultValue='00:01:00:00',
                 optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
         param = QgsProcessingParameterString(
                 self.PrmTimeDuration,
-                'Total duration for sun positions (hh:mm:ss)',
-                defaultValue='24:00:00',
+                'Total duration for sun positions (DD:HH:MM:SS)',
+                defaultValue='1:00:00:00',
                 optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
@@ -122,7 +122,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
 
         for i in range(num_events):
             delta = i*time_delta
-            utc_cur = utc + timedelta(0, delta)
+            utc_cur = utc + timedelta(seconds=delta)
             t = ts.from_datetime(utc_cur)
             try:
                 sun_position = wgs84.geographic_position_of(geocentric_sun.at(t)) # geographic_position_of method requires a geocentric position
