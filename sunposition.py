@@ -55,6 +55,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
                 True,
                 optional=False)
         )
+        # Time Series Support
         param = QgsProcessingParameterBoolean(
                 self.PrmTimeSeries,
                 'Create sun time series',
