@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import timedelta
 from .terminator import Terminator
 
 from qgis.core import (
@@ -10,14 +10,16 @@ from qgis.core import (
     QgsProcessing,
     QgsProcessingAlgorithm,
     QgsProcessingException,
+    QgsProcessingParameterDefinition,
     QgsProcessingLayerPostProcessorInterface,
     QgsProcessingParameterBoolean,
     QgsProcessingParameterDateTime,
+    QgsProcessingParameterString,
     QgsProcessingParameterFeatureSink)
 
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtCore import QVariant, QUrl, QDateTime
-from .utils import epsg4326, settings, SolarObj
+from .utils import epsg4326, settings, SolarObj, parse_timeseries
 
 class SunPositionAlgorithm(QgsProcessingAlgorithm):
     """
@@ -26,6 +28,9 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
 
     PrmOutputLayer = 'OutputLayer'
     PrmDateTime = 'DateTime'
+    PrmTimeSeries = 'TimeSeries'
+    PrmTimeIncrement = 'TimeIncrement'
+    PrmTimeDuration = 'TimeDuration'
     PrmStyle = 'Style'
 
     def initAlgorithm(self, config):
@@ -47,6 +52,29 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
                 True,
                 optional=False)
         )
+        # Time Series Support
+        param = QgsProcessingParameterBoolean(
+                self.PrmTimeSeries,
+                'Create sun time series',
+                False,
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+
+        param = QgsProcessingParameterString(
+                self.PrmTimeIncrement,
+                'Time increment between observations (DD:HH:MM:SS)',
+                defaultValue='00:01:00:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
+        param = QgsProcessingParameterString(
+                self.PrmTimeDuration,
+                'Total duration for sun positions (DD:HH:MM:SS)',
+                defaultValue='1:00:00:00',
+                optional=True)
+        param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
+        self.addParameter(param)
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputLayer,
@@ -56,9 +84,16 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
     def processAlgorithm(self, parameters, context, feedback):
         auto_style = self.parameterAsBool(parameters, self.PrmStyle, context)
         qdt = self.parameterAsDateTime(parameters, self.PrmDateTime, context)
-        qutc = qdt.toUTC()
-        utc = qutc.toPyDateTime()
-        lon, lat = Terminator.solar_position(utc)
+        generate_timeseries = self.parameterAsBool(parameters, self.PrmTimeSeries, context)
+        time_increment = self.parameterAsString(parameters, self.PrmTimeIncrement, context)
+        time_duration = self.parameterAsString(parameters, self.PrmTimeDuration, context)
+        if generate_timeseries:
+            num_events, time_delta = parse_timeseries(time_increment, time_duration)
+        else:
+            num_events = 1
+            time_delta = 0
+        if num_events == -1:
+            raise QgsProcessingException('Invalid time increment and/or duration.')
 
         f = QgsFields()
         f.append(QgsField("object_id", QVariant.Int))
@@ -72,13 +107,21 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(
             parameters, self.PrmOutputLayer, context, f,
             QgsWkbTypes.Point, epsg4326)
-        
-        feat = QgsFeature()
-        attr = [SolarObj.SUN.value, 'Sun', float(lat), float(lon), utc.timestamp(), qdt.toString('yyyy-MM-dd hh:mm:ss'), qutc.toString('yyyy-MM-dd hh:mm:ss')]
-        feat.setAttributes(attr)
-        pt = QgsPointXY(lon, lat)
-        feat.setGeometry(QgsGeometry.fromPointXY(pt))
-        sink.addFeature(feat)
+
+        qutc = qdt.toUTC()
+        utc = qutc.toPyDateTime()
+        for i in range(num_events):
+            delta = i*time_delta
+            utc_cur = utc + timedelta(seconds=delta)
+            lon, lat = Terminator.solar_position(utc_cur)
+            
+            feat = QgsFeature()
+            attr = [SolarObj.SUN.value, 'Sun', float(lat), float(lon), utc_cur.timestamp(), qdt.addSecs(delta).toString('yyyy-MM-dd hh:mm:ss'), qutc.addSecs(delta).toString('yyyy-MM-dd hh:mm:ss')]
+            feat.setAttributes(attr)
+            pt = QgsPointXY(lon, lat)
+            feat.setGeometry(QgsGeometry.fromPointXY(pt))
+            sink.addFeature(feat)
+
         if auto_style and context.willLoadLayerOnCompletion(dest_id):
             context.layerToLoadOnCompletionDetails(dest_id).setPostProcessor(StylePostProcessor.create())
 
