@@ -78,6 +78,7 @@ class SunPositionAlgorithm(QgsProcessingAlgorithm):
                 optional=True)
         param.setFlags(param.flags() | QgsProcessingParameterDefinition.FlagAdvanced)
         self.addParameter(param)
+
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.PrmOutputLayer,
