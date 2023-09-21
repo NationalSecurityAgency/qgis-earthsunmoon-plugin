@@ -62,6 +62,7 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
             self.canvas.setMapTool(self.savedMapTool)
             self.savedMapTool = None
         self.rubber.reset()
+        QDockWidget.closeEvent(self, e)
 
     def initialTimeZone(self):
         """
