@@ -19,7 +19,7 @@
 """
 
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 
 
@@ -29,7 +29,7 @@ class Terminator:
             (This class has been adapted from https://stackoverflow.com/a/55653999).
             
             Arguments:
-            @param date [datetime] (datetime.utcnow()): The time in UTC, used to calculate the position of the sun.
+            @param date [datetime] (datetime.now(timezone.utc)): The time in UTC, used to calculate the position of the sun.
             @param delta [float] (0.1): Stepsize in degrees to determine the resolution of the polygon.
             @param refraction [float] (-0.83): Nighttime is considered when the sun is more than <refraction>° below the horizon.
                 The default value corresponds to sunset, adjusted for refraction and the thickness of the solar disc.
@@ -59,7 +59,7 @@ class Terminator:
             These two techniques are combined to give closely spaced coordinates both near the equator and the poles.
         """
         if date is None:
-            date = datetime.utcnow()
+            date = datetime.now(timezone.utc)
         elif date.utcoffset(): # make sure date is UTC, or naive with respect to time zones
             raise ValueError(f"Datetime instance must be UTC, not {date.tzname()}")
         self.delta, self.refraction = delta, refraction

@@ -13,7 +13,7 @@ import json
 from qgis.core import QgsPointXY, QgsGeometry, QgsExpression, QgsProject
 from qgis.PyQt.QtCore import QDateTime
 from qgis.utils import qgsfunction
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, available_timezones
 
 from skyfield.api import load, load_file, wgs84
@@ -346,7 +346,7 @@ def esm_local_datetime(feature, parent):
     </ul>
     """
     try:
-        dt = datetime.utcnow()
+        dt = datetime.now(timezone.utc)
         dt = dt.replace(tzinfo=ZoneInfo('UTC'))
         tz_name = dt.astimezone().tzname()
         dt = get_datetime(dt, tz_name)  # This will try to standardize the timezone
