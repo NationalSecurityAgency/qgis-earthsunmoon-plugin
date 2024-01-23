@@ -2,7 +2,7 @@
 name=Earth, Sun, Moon, and Planets
 qgisMinimumVersion=3.14
 description=Tools to calculate the positions of the sun, moon, and planets when viewed directly overhead for a particular date and time. Create day/night terminator vector layers. Display solar and lunar information for a coordinate at the specified date and time. It provides expression functions to access solar and lunar information. (Note the Python library enhancements.)
-version=3.1.1
+version=3.1.2
 author=C Hamilton
 email=adenaculture@gmail.com
 about=
@@ -21,6 +21,7 @@ experimental=False
 deprecated=False
 hasProcessingProvider=yes
 changelog=
+    3.1.2 - Remove deprecated utcnow
     3.1.1 - Add ability to create a series of sun and moon positions
     3.1.0 - Add expressions for lunar and solar information
     3.0.4 - Fix typos
