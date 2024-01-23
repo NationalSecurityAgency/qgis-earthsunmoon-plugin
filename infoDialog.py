@@ -211,10 +211,16 @@ class SolarInfoDialog(QDockWidget, FORM_CLASS):
                 t0 = ts.utc(year, 1, 1)
                 t1 = ts.utc(year, 12, 31)
                 t, y = almanac.find_discrete(t0, t1, almanac.seasons(eph))
-                self.vernalEquinoxLabel.setText(self.formatDateTime(t[0]))
-                self.summerSolsticeLabel.setText(self.formatDateTime(t[1]))
-                self.autumnalEquinoxLabel.setText(self.formatDateTime(t[2]))
-                self.winterSolsticeLabel.setText(self.formatDateTime(t[3]))
+                if self.cur_location.y() >= 0:
+                    self.vernalEquinoxLabel.setText(self.formatDateTime(t[0]))
+                    self.summerSolsticeLabel.setText(self.formatDateTime(t[1]))
+                    self.autumnalEquinoxLabel.setText(self.formatDateTime(t[2]))
+                    self.winterSolsticeLabel.setText(self.formatDateTime(t[3]))
+                else:
+                    self.vernalEquinoxLabel.setText(self.formatDateTime(t[2]))
+                    self.summerSolsticeLabel.setText(self.formatDateTime(t[3]))
+                    self.autumnalEquinoxLabel.setText(self.formatDateTime(t[0]))
+                    self.winterSolsticeLabel.setText(self.formatDateTime(t[1]))
         except Exception:
             self.iface.messageBar().pushMessage("", "The ephemeris file does not cover the selected date range. Go to Settings and download and select an ephemeris file that contains your date range.", level=Qgis.Critical, duration=6)
                 
