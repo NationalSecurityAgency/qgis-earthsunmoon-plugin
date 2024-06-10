@@ -4,7 +4,7 @@ qgisMinimumVersion=3.14
 description=Tools to calculate the positions of the sun, moon, and planets when viewed directly overhead for a particular date and time. Create day/night terminator vector layers. Display solar and lunar information for a coordinate at the specified date and time. It provides expression functions to access solar and lunar information. (Note the Python library enhancements.)
 version=3.1.2
 author=C Hamilton
-email=adenaculture@gmail.com
+email=TBD
 about=
     Enhance this plugin with two Python libraries not provided by the QGIS distribution. Open up the OSGeo4W Shell and type "pip install timezonefinder skyfield" or whatever method you use to install Python libraries. You don't need to be a system administrator to do this. Without adding in these libraries, the only algorithms available are the "Day/Night terminator" and "Sun position directly overhead"
 
